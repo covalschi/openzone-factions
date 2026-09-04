@@ -26,9 +26,11 @@ forbid       = ["Bad type", "Can't compile", "NULL pointer to instance"]
 error_regex  = ["SCRIPT\\s+\\(E\\).*OZF_", "\\[OpenZone\\] ERROR"]
 # Стенд ходить до моста по http на 127.0.0.1, і ядро чесно попереджає про це
 # кожен бут; на локальному стенді це стан, а не подія.
-noise        = ["Bridge.Url is not https", "module class \"OZ_Module_Radio\" is not in CfgVehicles"]
+noise        = ["Bridge.Url is not https", "module class \"OZ_Module_Radio\" is not in CfgVehicles", "factions settings: no Faction section in the core config or its backup"]
 # The second line: the PDA profiles of the stand name the radio module and this
-# stand carries no radio -- a fact of the stand, not of this mod.
+# stand carries no radio -- a fact of the stand, not of this mod. The third: the
+# one-time migration of the invitation lifetime warns on a clean install where
+# nothing was ever lost; the admin reads it in the log, the verdict does not fail.
 
 # Знято з першого бута цього стенду 2026-09-04 18:18 (script_2026-09-04_18-17-49.log):
 # дев'ять фракцій у Factions.json стенду. Рухається лише навмисною правкою конфігу.
