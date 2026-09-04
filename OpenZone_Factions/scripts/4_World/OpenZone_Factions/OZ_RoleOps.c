@@ -59,7 +59,7 @@ class OZ_RoleReply : OZ_BridgeReply
         if (!JsonFileLoader<OZ_RoleAnswer>.LoadData(json, a, err) || !a)
         {
             if (to)
-                OZ_Rpc.RoleRespond(to, m_Op, false, "STR_OZ_ERR_INTERNAL");
+                OZF_Rpc.RoleRespond(to, m_Op, false, "STR_OZ_ERR_INTERNAL");
             return;
         }
 
@@ -67,7 +67,7 @@ class OZ_RoleReply : OZ_BridgeReply
         {
             OZ_Log.Info("roles: " + m_Who + " did " + m_Op + " -- accepted by Discord");
             if (to)
-                OZ_Rpc.RoleRespond(to, m_Op, true, "");
+                OZF_Rpc.RoleRespond(to, m_Op, true, "");
             return;
         }
 
@@ -76,14 +76,14 @@ class OZ_RoleReply : OZ_BridgeReply
         // роллю -- підніми його роль вище» набагато корисніше за «не вдалося».
         OZ_Log.Warn("roles: " + m_Who + " " + m_Op + " refused: " + a.Why);
         if (to)
-            OZ_Rpc.RoleRespond(to, m_Op, false, a.Why);
+            OZF_Rpc.RoleRespond(to, m_Op, false, a.Why);
     }
 
     override void OnFail(int code)
     {
         PlayerIdentity to = OZ_Link.Online(m_Who);
         if (to)
-            OZ_Rpc.RoleRespond(to, m_Op, false, "STR_OZ_ERR_NO_BRIDGE");
+            OZF_Rpc.RoleRespond(to, m_Op, false, "STR_OZ_ERR_NO_BRIDGE");
     }
 }
 
@@ -226,7 +226,7 @@ class OZ_RoleOps
 
         if (targetUid == "")
         {
-            OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NO_TARGET");
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NO_TARGET");
             return;
         }
 
@@ -235,7 +235,7 @@ class OZ_RoleOps
         // собі, гірший за чесне «зараз не вийшло». Рішення власника.
         if (!OZ_BridgeClient.Alive())
         {
-            OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NO_BRIDGE");
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NO_BRIDGE");
             return;
         }
 
@@ -252,7 +252,7 @@ class OZ_RoleOps
         {
             if (!consented && !admin)
             {
-                OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NEEDS_INVITE");
+                OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NEEDS_INVITE");
                 return;
             }
         }
@@ -296,7 +296,7 @@ class OZ_RoleOps
         if (!JsonFileLoader<OZ_RoleAsk>.MakeData(a, letter, err, false))
         {
             OZ_Log.Error("roles: cannot build the letter: " + err);
-            OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_INTERNAL");
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_INTERNAL");
             return;
         }
 
@@ -329,13 +329,13 @@ class OZ_RoleOps
 
         if (mine == "")
         {
-            OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NOT_LEADER");
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NOT_LEADER");
             return false;
         }
 
         if (!OZ_Roles.IsLeader(actorUid))
         {
-            OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NOT_LEADER");
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NOT_LEADER");
             return false;
         }
 
@@ -345,14 +345,14 @@ class OZ_RoleOps
             if (arg == mine)
                 return true;
 
-            OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_OTHER_FACTION");
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_OTHER_FACTION");
             return false;
         }
 
         // Решта -- тільки над своїми.
         if (OZ_Factions.OrgOfUid(targetUid) != mine)
         {
-            OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NOT_YOURS");
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NOT_YOURS");
             return false;
         }
 
@@ -374,7 +374,7 @@ class OZ_RoleOps
             // роздавав посад Волі.
             if (arg.IndexOf(mine + ":") != 0)
             {
-                OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_OTHER_FACTION");
+                OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_OTHER_FACTION");
                 return false;
             }
 
@@ -383,7 +383,7 @@ class OZ_RoleOps
             // лідер.
             if (arg == mine + ":leader")
             {
-                OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_USE_TRANSFER");
+                OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_USE_TRANSFER");
                 return false;
             }
 
@@ -391,7 +391,7 @@ class OZ_RoleOps
         }
 
         // Звання й мітки -- не лідерська справа.
-        OZ_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_ADMIN_ONLY");
+        OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_ADMIN_ONLY");
         return false;
     }
 }
@@ -447,7 +447,9 @@ class OZ_FactionInvites
 {
     private static ref map<string, ref OZ_FactionInvite> s_By;
 
-    // Строк життя береться з Settings.json (Faction.InviteTtlSeconds).
+    // Строк життя береться з НАШОГО файла налаштувань
+    // ($profile:OpenZone\OZ_Factions_Settings.json, Faction.InviteTtlSeconds).
+    // До 2026-09-04 це число жило розділом у конфігу ядра.
 
     static void Offer(PlayerIdentity from, string targetUid)
     {
@@ -461,7 +463,7 @@ class OZ_FactionInvites
         string mine = OZ_Factions.OrgOfUid(me);
         if (mine == "" || !OZ_Roles.IsLeader(me))
         {
-            OZ_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_NOT_LEADER");
+            OZF_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_NOT_LEADER");
             return;
         }
 
@@ -473,19 +475,19 @@ class OZ_FactionInvites
         // про це не було як.
         if (targetUid == "")
         {
-            OZ_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_NO_TARGET");
+            OZF_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_NO_TARGET");
             return;
         }
 
         if (targetUid == me)
         {
-            OZ_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_SELF");
+            OZF_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_SELF");
             return;
         }
 
         if (OZ_Factions.OrgOfUid(targetUid) == mine)
         {
-            OZ_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_ALREADY_IN");
+            OZF_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_ALREADY_IN");
             return;
         }
 
@@ -503,7 +505,7 @@ class OZ_FactionInvites
         OZ_FactionInvite already = Pending(targetUid);
         if (already)
         {
-            OZ_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_INVITE_BUSY");
+            OZF_Rpc.RoleRespond(from, "invite", false, "STR_OZ_ERR_INVITE_BUSY");
             return;
         }
 
@@ -514,17 +516,17 @@ class OZ_FactionInvites
         inv.Faction   = mine;
         inv.FromUid   = me;
         inv.FromName  = from.GetName();
-        inv.ExpiresAt = GetGame().GetTime() + OZ_Settings.Get().Faction.InviteTtlSeconds * 1000;
+        inv.ExpiresAt = GetGame().GetTime() + OZF_Settings.Get().Faction.InviteTtlSeconds * 1000;
 
         s_By.Set(targetUid, inv);
 
-        OZ_Rpc.RoleRespond(from, "invite", true, "");
+        OZF_Rpc.RoleRespond(from, "invite", true, "");
 
         // Кажемо запрошеному одразу, якщо він у Зоні. Не в Зоні -- побачить,
         // коли зайде, якщо встигне до строку.
         PlayerIdentity to = OZ_Link.Online(targetUid);
         if (to)
-            OZ_Rpc.RoleRespond(to, "invited", true, mine);
+            OZF_Rpc.RoleRespond(to, "invited", true, mine);
     }
 
     // Чинне запрошення, або null. Прострочене прибирає за собою.
@@ -558,7 +560,7 @@ class OZ_FactionInvites
         OZ_FactionInvite inv = Pending(me);
         if (!inv)
         {
-            OZ_Rpc.RoleRespond(who, "accept", false, "STR_OZ_ERR_NO_INVITE");
+            OZF_Rpc.RoleRespond(who, "accept", false, "STR_OZ_ERR_NO_INVITE");
             return;
         }
 
@@ -589,7 +591,7 @@ class OZ_FactionInvites
             return;
 
         s_By.Remove(who.GetPlainId());
-        OZ_Rpc.RoleRespond(who, "decline", true, "");
+        OZF_Rpc.RoleRespond(who, "decline", true, "");
     }
 
     // Гравець вийшов -- запрошення до нього більше нікому показувати.

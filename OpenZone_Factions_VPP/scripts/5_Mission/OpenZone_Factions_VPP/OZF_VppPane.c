@@ -724,18 +724,18 @@ modded class OZ_VppAdminMenu
                             Hint("pick a faction on the left first");
                             return true;
                         }
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.FACTION_SET, player, m_Factions[m_FacPicked]);
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.FACTION_SET, player, m_Factions[m_FacPicked]);
                     }
                     else if (nm == "BtnClearFac")
                     {
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.FACTION_CLEAR, player, "");
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.FACTION_CLEAR, player, "");
                     }
                     else
                     {
                         // Консоль ставить лiдера НАПРЯМУ. leader.transfer тут не
                         // годиться: вiн -- акт лiдера й вимагає, щоб актор сам
                         // тримав пост (змiряно: nobody to hand it over from).
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.LEADER_SET, player, "");
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.LEADER_SET, player, "");
                     }
                     return true;
                 }
@@ -778,11 +778,11 @@ modded class OZ_VppAdminMenu
                         }
                         if (m_FRankAt >= fopts.Count())
                             m_FRankAt = 0;
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, "uid:" + fuid, fopts[m_FRankAt]);
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, "uid:" + fuid, fopts[m_FRankAt]);
                     }
                     else
                     {
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, "uid:" + fuid, "");
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, "uid:" + fuid, "");
                     }
                     return true;
                 }
@@ -803,13 +803,13 @@ modded class OZ_VppAdminMenu
                             Hint("no ranks in the bot registry yet");
                             return true;
                         }
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.RANK_SET, "uid:" + ruid, m_Ranks[m_RankAt]);
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.RANK_SET, "uid:" + ruid, m_Ranks[m_RankAt]);
                     }
                     else
                     {
                         // Порожнiй аргумент -- зняти звання зовсiм: так читає його
                         // мiст (rank.set без arg знiмає всi).
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.RANK_SET, "uid:" + ruid, "");
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.RANK_SET, "uid:" + ruid, "");
                     }
                     return true;
                 }
@@ -837,9 +837,9 @@ modded class OZ_VppAdminMenu
                     }
 
                     if (nm == "BtnTraitAdd")
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.TRAIT_ADD, "uid:" + tuid, m_Traits[m_TraitAt]);
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.TRAIT_ADD, "uid:" + tuid, m_Traits[m_TraitAt]);
                     else
-                        OZ_Rpc.RoleRequest(OZ_RoleOp.TRAIT_REMOVE, "uid:" + tuid, m_Traits[m_TraitAt]);
+                        OZF_Rpc.RoleRequest(OZ_RoleOp.TRAIT_REMOVE, "uid:" + tuid, m_Traits[m_TraitAt]);
                     return true;
                 }
 

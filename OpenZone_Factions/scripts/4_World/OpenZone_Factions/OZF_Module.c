@@ -31,6 +31,11 @@ class OZF_Module : CF_ModuleWorld
         if (!GetGame().IsServer())
             return;
 
+        // ВЛАСНІ НАЛАШТУВАННЯ, а не розділ у конфігу ядра (2026-09-04).
+        // Перший старт забирає старе число з OZ_Core_Settings.json, щоб адмін
+        // не втратив межу, яку колись виставив, -- див. OZF_Settings.Inherit.
+        OZF_Settings.ServerLoad();
+
         OZ_Factions.ServerLoad();
         OZF_Loadouts.ServerLoad();
 
@@ -62,9 +67,17 @@ class OZF_Module : CF_ModuleWorld
         // штовхає сюди, щоб гра зробила свою.
         OZ_BridgeClient.Subscribe("wipe", new OZ_WipeSink());
 
-        OZ_Rpc.RegisterRoles(this);
+        // КАНАЛ РОЛЕЙ -- НАШ, під нашим іменем мода (2026-09-04). Був ядровим
+        // (OZ_Rpc.RegisterRoles), тобто ядро тримало реєстрацію заради гри,
+        // якої в ньому немає. Клієнтську половину реєструє OZF_MissionGameplay.
+        OZF_Rpc.RegisterServer(this);
 
-        OZ_Log.Info("factions loaded: " + OZ_Factions.Count().ToString() + " faction(s)");
+        // ЧИСЛО У ФОРМІ `ключ=значення`, як у ядровому «core loaded: ...».
+        // Це не косметика: вердикт стенду читає лічильники САМЕ з рядка
+        // готовності і саме в цій формі, тож «9 faction(s)» був числом для
+        // людини й порожнечею для перевірки (зміряно 2026-09-04: оголошений
+        // у профілі `factions = 9` не міг збігтися ніколи).
+        OZ_Log.Info("factions loaded: factions=" + OZ_Factions.Count().ToString());
 
         // МІСТ ДЛЯ ФРАКЦІЙ ОБОВ'ЯЗКОВИЙ, і мовчати про це не можна (ТЗ-2 R2.1).
         //
@@ -111,7 +124,9 @@ class OZF_Module : CF_ModuleWorld
 
     // Зміна ролей із гри. Особа -- ЗАВЖДИ з sender: клієнт не називає, від
     // чийого імені просить, і не може -- у конверті немає такого поля.
-    void OZ_RoleReq(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    //
+    // Ім'я методу -- рядок OZF_Rpc.RPC_ROLE_REQ посимвольно.
+    void OZF_RoleReq(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
     {
         if (type != CallType.Server)
             return;
@@ -148,7 +163,7 @@ class OZF_Module : CF_ModuleWorld
             targetUid = OZ_RoleOps.UidByTag(tag, sender.GetPlainId());
             if (targetUid == "")
             {
-                OZ_Rpc.RoleRespond(sender, op, false, "STR_OZ_ERR_NO_TARGET");
+                OZF_Rpc.RoleRespond(sender, op, false, "STR_OZ_ERR_NO_TARGET");
                 return;
             }
         }
@@ -156,7 +171,7 @@ class OZF_Module : CF_ModuleWorld
         {
             if (!OZ_Perm.IsAdmin(sender))
             {
-                OZ_Rpc.RoleRespond(sender, op, false, "STR_OZ_ERR_ADMIN_ONLY");
+                OZF_Rpc.RoleRespond(sender, op, false, "STR_OZ_ERR_ADMIN_ONLY");
                 return;
             }
             targetUid = targetName.Substring(4, targetName.Length() - 4);

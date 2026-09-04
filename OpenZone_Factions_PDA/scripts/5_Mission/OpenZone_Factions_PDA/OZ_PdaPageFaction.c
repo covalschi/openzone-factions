@@ -1,5 +1,5 @@
 // Сторінка «Фракція»: свої люди і фракційні дії. Все, що робить лідер,
-// їде через OZ_Rpc.RoleRequest -- тим самим каналом, яким це робили
+// їде через OZF_Rpc.RoleRequest -- тим самим каналом, яким це робили
 // контакти, поки фракційні кнопки жили там.
 //
 // ДІЛИТЬ ВКЛАДКУ З КОНТАКТАМИ (рішення власника 2026-08-30): ліворуч люди,
@@ -438,27 +438,27 @@ class OZ_PdaPageFaction : OZ_PdaPage
             // Ця вкладка є лише в того, хто ВЖЕ в угрупованні, тож прийняти
             // тут -- завжди покинути своє: кажемо, що саме (ТЗ-4 R-C2.2).
             if (m_St && Confirm("join", JoinText()))
-                OZ_Rpc.RoleRequest("accept", "", "");
+                OZF_Rpc.RoleRequest("accept", "", "");
             return true;
         }
 
         if (w == m_BtnRefuse)
         {
-            OZ_Rpc.RoleRequest("decline", "", "");
+            OZF_Rpc.RoleRequest("decline", "", "");
             return true;
         }
 
         if (w == m_BtnKick)
         {
             if (m_Picked != "" && Confirm("kick:" + m_Picked, Ask("STR_OZ_F_ASK_KICK", PickedLabel())))
-                OZ_Rpc.RoleRequest(OZ_RoleOp.FACTION_CLEAR, Target(), "");
+                OZF_Rpc.RoleRequest(OZ_RoleOp.FACTION_CLEAR, Target(), "");
             return true;
         }
 
         if (w == m_BtnLead)
         {
             if (m_Picked != "" && Confirm("lead:" + m_Picked, Ask("STR_OZ_F_ASK_LEAD", PickedLabel())))
-                OZ_Rpc.RoleRequest(OZ_RoleOp.LEADER_TRANSFER, Target(), "");
+                OZF_Rpc.RoleRequest(OZ_RoleOp.LEADER_TRANSFER, Target(), "");
             return true;
         }
 
@@ -473,7 +473,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
             }
             // Запрошення підтвердження не потребує: воно нічого не міняє,
             // поки той не погодиться сам. Адреса -- ключ персонажа.
-            OZ_Rpc.RoleRequest("invite", "key:" + who, "");
+            OZF_Rpc.RoleRequest("invite", "key:" + who, "");
             return true;
         }
 
@@ -487,7 +487,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
             string next = NextRank(w == m_BtnPromote);
             string ask  = T("STR_OZ_F_ASK_RANK") + " " + PickedLabel() + ": " + RankLabel(next) + " - " + T("STR_OZ_F_AGAIN");
             if (Confirm("rank:" + m_Picked + ":" + next, ask))
-                OZ_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, Target(), next);
+                OZF_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, Target(), next);
             return true;
         }
 
@@ -495,7 +495,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
         {
             // Ціль не називаємо: піти можна тільки самому.
             if (m_St && Confirm("leave", LeaveText()))
-                OZ_Rpc.RoleRequest("leave", "", "");
+                OZF_Rpc.RoleRequest("leave", "", "");
             return true;
         }
 
