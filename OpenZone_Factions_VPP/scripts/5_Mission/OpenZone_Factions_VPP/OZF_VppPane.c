@@ -103,13 +103,13 @@ modded class OZ_VppAdminMenu
         // ВЛАСНИЙ слухач вiдповiдей, а не гiлка в ядровому: ростер i пермадес
         // -- нашi операцiї, i ядро про них бiльше не знає.
         OZ_ClientState.AdminWatch().Insert(this.OnFactionResponse);
-        OZ_RoleNotice.OnAnswer.Insert(this.OnRoleAnswer);
+        OZ_Notice.OnAnswer.Insert(this.OnRoleAnswer);
     }
 
     void ~OZ_VppAdminMenu()
     {
         OZ_ClientState.AdminWatch().Remove(this.OnFactionResponse);
-        OZ_RoleNotice.OnAnswer.Remove(this.OnRoleAnswer);
+        OZ_Notice.OnAnswer.Remove(this.OnRoleAnswer);
     }
 
     override void OnPaneShown(string id)

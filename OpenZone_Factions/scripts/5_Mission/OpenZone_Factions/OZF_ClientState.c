@@ -1,7 +1,7 @@
 // Клієнтський приймач нашого каналу ролей.
 //
 // ЧОМУ 5_Mission, А НЕ МОДУЛЬ CF. Модуль живе в 4_World, а спільна точка
-// збору відповідей -- OZ_RoleNotice -- у 5_Mission ядра, і видимості знизу
+// збору відповідей -- OZ_Notice -- у 5_Mission ядра, і видимості знизу
 // вгору в Enforce немає: 3_Game -> 4_World -> 5_Mission і тільки так. Рівно
 // з цієї причини ядро тримає свій OZ_ClientState там само.
 //
@@ -34,6 +34,6 @@ class OZF_ClientState
         if (!ctx.Read(data))
             return;
 
-        OZ_RoleNotice.Take(data.param1, data.param2, data.param3);
+        OZ_Notice.Take(data.param1, data.param2, data.param3);
     }
 }

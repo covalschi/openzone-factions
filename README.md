@@ -29,6 +29,15 @@ the PDA or without VPP simply leaves that PBO out.
   ranks, traits, membership and leadership live in the bot's database. There is
   no "factions without the bridge" configuration.
 
+## Upgrading
+
+Run this mod on the **first** boot after upgrading Core: the invitation lifetime
+moved out of `OZ_Core_Settings.json` into this mod's own
+`$profile:OpenZone\OZ_Factions_Settings.json`, and the copy is made once, from
+Core's config or from its backup. A server that boots the new Core without this
+mod loses the old section from both places after the second boot; if that
+happened, the log says so and the number goes in by hand.
+
 ## Layout
 
 ```

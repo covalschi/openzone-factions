@@ -47,7 +47,7 @@ class CfgMods
             class gameScriptModule    { value = ""; files[] = {"OpenZone_Factions/scripts/3_Game"}; };
             class worldScriptModule   { value = ""; files[] = {"OpenZone_Factions/scripts/4_World"}; };
             // 5_Mission з'явився 2026-09-04 разом із власним каналом ролей:
-            // його клієнтський приймач мусить бачити OZ_RoleNotice, а той
+            // його клієнтський приймач мусить бачити OZ_Notice, а той
             // живе в 5_Mission ядра.
             class missionScriptModule { value = ""; files[] = {"OpenZone_Factions/scripts/5_Mission"}; };
         };
