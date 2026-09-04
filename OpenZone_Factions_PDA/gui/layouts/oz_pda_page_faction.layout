@@ -3,7 +3,7 @@
 FrameWidgetClass OZ_PageFaction {
  visible 1
  position 640 0
- size 666 518
+ size 642 518
  hexactpos 1
  vexactpos 1
  hexactsize 1
@@ -36,7 +36,7 @@ FrameWidgetClass OZ_PageFaction {
     FrameWidgetClass FactionCol {
      visible 1
      position 20 20
-     size 626 478
+     size 602 478
      hexactpos 1
      vexactpos 1
      hexactsize 1
@@ -62,7 +62,7 @@ FrameWidgetClass OZ_PageFaction {
        visible 1
        ignorepointer 1
        position 32 0
-       size 594 34
+       size 570 34
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -81,7 +81,7 @@ FrameWidgetClass OZ_PageFaction {
        visible 1
        ignorepointer 1
        position 0 40
-       size 626 20
+       size 602 20
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -98,7 +98,7 @@ FrameWidgetClass OZ_PageFaction {
       FrameWidgetClass SecMemb {
        visible 1
        position 0 66
-       size 626 30
+       size 602 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -122,7 +122,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 12 0
-         size 614 24
+         size 590 24
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -140,7 +140,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 29
-         size 626 1
+         size 602 1
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -151,11 +151,11 @@ FrameWidgetClass OZ_PageFaction {
         }
        }
       }
-      // Список своїх. Спейсер росте рівно на суму рядків; скрипт кладе рядки і зве Update(). Ширина рядка -- від списку: 626 - 10 під смугу прокрутки.
+      // Список своїх. Спейсер росте рівно на суму рядків; скрипт кладе рядки і зве Update(). Ширина рядка -- від списку: 602 - 10 під смугу прокрутки.
       ScrollWidgetClass FactionScroll {
        visible 1
        position 0 102
-       size 626 240
+       size 602 240
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -182,7 +182,7 @@ FrameWidgetClass OZ_PageFaction {
       FrameWidgetClass SecAct {
        visible 1
        position 0 348
-       size 626 30
+       size 602 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -206,7 +206,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 12 0
-         size 614 24
+         size 590 24
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -224,7 +224,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 29
-         size 626 1
+         size 602 1
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -238,7 +238,7 @@ FrameWidgetClass OZ_PageFaction {
       ButtonWidgetClass BtnFPromote {
        visible 0
        position 0 384
-       size 200 30
+       size 192.667 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -250,7 +250,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position -1 -1
-         size 202 32
+         size 194.667 32
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -263,7 +263,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -276,7 +276,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -294,8 +294,8 @@ FrameWidgetClass OZ_PageFaction {
       }
       ButtonWidgetClass BtnFDemote {
        visible 0
-       position 212 384
-       size 200 30
+       position 204.667 384
+       size 192.667 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -307,7 +307,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position -1 -1
-         size 202 32
+         size 194.667 32
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -320,7 +320,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -333,7 +333,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -351,8 +351,8 @@ FrameWidgetClass OZ_PageFaction {
       }
       ButtonWidgetClass BtnFLeave {
        visible 0
-       position 424 384
-       size 200 30
+       position 409.333 384
+       size 192.667 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -364,7 +364,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position -1 -1
-         size 202 32
+         size 194.667 32
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -377,7 +377,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -390,7 +390,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -409,7 +409,7 @@ FrameWidgetClass OZ_PageFaction {
       ButtonWidgetClass BtnFKick {
        visible 0
        position 0 420
-       size 200 30
+       size 192.667 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -421,7 +421,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position -1 -1
-         size 202 32
+         size 194.667 32
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -434,7 +434,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -447,7 +447,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -465,8 +465,8 @@ FrameWidgetClass OZ_PageFaction {
       }
       ButtonWidgetClass BtnFLead {
        visible 0
-       position 212 420
-       size 200 30
+       position 204.667 420
+       size 192.667 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -478,7 +478,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position -1 -1
-         size 202 32
+         size 194.667 32
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -491,7 +491,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -504,7 +504,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -522,8 +522,8 @@ FrameWidgetClass OZ_PageFaction {
       }
       ButtonWidgetClass BtnFInvite {
        visible 0
-       position 424 420
-       size 200 30
+       position 409.333 420
+       size 192.667 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -535,7 +535,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position -1 -1
-         size 202 32
+         size 194.667 32
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -548,7 +548,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -561,7 +561,7 @@ FrameWidgetClass OZ_PageFaction {
          visible 1
          ignorepointer 1
          position 0 0
-         size 200 30
+         size 192.667 30
          hexactpos 1
          vexactpos 1
          hexactsize 1
@@ -582,7 +582,7 @@ FrameWidgetClass OZ_PageFaction {
        visible 1
        ignorepointer 1
        position 0 456
-       size 626 22
+       size 602 22
        hexactpos 1
        vexactpos 1
        hexactsize 1
@@ -604,7 +604,7 @@ FrameWidgetClass OZ_PageFaction {
   PanelWidgetClass InvitePane {
    visible 0
    position 20 122
-   size 626 60
+   size 602 60
    hexactpos 1
    vexactpos 1
    hexactsize 1
@@ -630,7 +630,7 @@ FrameWidgetClass OZ_PageFaction {
      visible 1
      ignorepointer 1
      position 14 4
-     size 596 22
+     size 572 22
      hexactpos 1
      vexactpos 1
      hexactsize 1

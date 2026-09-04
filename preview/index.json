@@ -1,9 +1,9 @@
 {
-  "note": "Preview gallery for ui_gallery: the faction page of the PDA, its member row and the FACTIONS pane of the VPP window. The row's host is the list width minus the scrollbar (626 - 10). A fixture travels to the bridge as one JSON string of at most ~1000 bytes on the wire.",
+  "note": "Preview gallery for ui_gallery: the faction page of the PDA, its member row and the FACTIONS pane of the VPP window. The row's host is the list width minus the scrollbar (602 - 10). A fixture travels to the bridge as one JSON string of at most ~1000 bytes on the wire.",
   "entries": [
-    {"name": "page-faction", "layout": "OpenZone_Factions_PDA/gui/layouts/oz_pda_page_faction.layout", "host": "1306 518", "fixture": "preview/faction.json",
-     "note": "The host is the WHOLE page area, not the page's own 666x518: the root stands at position 640 0, because this is the right half of the contacts tab, and a host only as wide as the half would leave all but its first 26 units outside the picture. The empty left third of the shot is where the base mod draws contacts."},
-    {"name": "row-faction", "layout": "OpenZone_Factions_PDA/gui/layouts/oz_pda_faction_row.layout", "host": "616 32", "fixture": "preview/faction-row.json"},
+    {"name": "page-faction", "layout": "OpenZone_Factions_PDA/gui/layouts/oz_pda_page_faction.layout", "host": "1282 518", "fixture": "preview/faction.json",
+     "note": "The host is the WHOLE page area, not the page's own 642x518: the root stands at position 640 0, because this is the right half of the contacts tab, and a host only as wide as the half would leave all but its first 2 units outside the picture. The empty left third of the shot is where the base mod draws contacts."},
+    {"name": "row-faction", "layout": "OpenZone_Factions_PDA/gui/layouts/oz_pda_faction_row.layout", "host": "592 32", "fixture": "preview/faction-row.json"},
     {"name": "factions-vpp", "layout": "OpenZone_Factions_VPP/gui/layouts/ozf_vpp_pane.layout", "host": "1000 620"}
   ]
 }

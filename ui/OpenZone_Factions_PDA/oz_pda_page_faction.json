@@ -12,38 +12,38 @@
         "note": "Підзаголовок: моє звання і, якщо є, посада лідера. Пише скрипт."}},
       {"section": {"name": "SecMemb", "text": "#STR_OZ_FACTION_SEC_MEMBERS"}},
       {"list": {"name": "FactionScroll", "stack": "FactionRows", "h": "fill",
-        "note": "Список своїх. Спейсер росте рівно на суму рядків; скрипт кладе рядки і зве Update(). Ширина рядка -- від списку: 626 - 10 під смугу прокрутки.",
+        "note": "Список своїх. Спейсер росте рівно на суму рядків; скрипт кладе рядки і зве Update(). Ширина рядка -- від списку: 602 - 10 під смугу прокрутки.",
         "rows": {
           "oz_pda_faction_row": {"row": {"name": "OZ_FactionRow", "h": 32, "click": true,
             "note": "Один рядок члена фракції. Ім'я кореня скрипт міняє на ключ персонажа, UserID 8 відрізняє його в OnClick.",
             "children": [
               {"panel": {"name": "FRowBg", "size": "fill", "color": "$panel", "priority": 0}},
               {"panel": {"name": "FRowPick", "at": [0, 0], "size": [3, 32], "color": "$accent", "hidden": true, "priority": 1}},
-              {"label": {"name": "FRowName", "at": [12, 0], "w": 380, "h": 30, "font": "body", "color": "$text", "priority": 1}},
-              {"label": {"name": "FRowRank", "at": [400, 0], "w": 200, "h": 30, "font": "small", "color": "$muted", "align": "right", "priority": 1}}
+              {"label": {"name": "FRowName", "at": [12, 0], "w": 356, "h": 30, "font": "body", "color": "$text", "priority": 1}},
+              {"label": {"name": "FRowRank", "at": [376, 0], "w": 200, "h": 30, "font": "small", "color": "$muted", "align": "right", "priority": 1}}
             ]}}
         }}},
       {"section": {"name": "SecAct", "text": "#STR_OZ_FACTION_SEC_ACTIONS"}},
       {"hbox": {"h": "$size.button", "gap": 12, "children": [
-        {"button": {"name": "BtnFPromote", "w": 200, "hidden": true, "edge": "$ok", "color": "$ok"}},
-        {"button": {"name": "BtnFDemote", "w": 200, "hidden": true}},
-        {"button": {"name": "BtnFLeave", "w": 200, "hidden": true, "edge": "$bad", "color": "$bad"}}
+        {"button": {"name": "BtnFPromote", "w": "fill", "hidden": true, "edge": "$ok", "color": "$ok"}},
+        {"button": {"name": "BtnFDemote", "w": "fill", "hidden": true}},
+        {"button": {"name": "BtnFLeave", "w": "fill", "hidden": true, "edge": "$bad", "color": "$bad"}}
       ]}},
       {"hbox": {"h": "$size.button", "gap": 12, "children": [
-        {"button": {"name": "BtnFKick", "w": 200, "hidden": true, "edge": "$bad", "color": "$bad"}},
-        {"button": {"name": "BtnFLead", "w": 200, "hidden": true}},
-        {"button": {"name": "BtnFInvite", "w": 200, "hidden": true, "edge": "$ok", "color": "$ok"}}
+        {"button": {"name": "BtnFKick", "w": "fill", "hidden": true, "edge": "$bad", "color": "$bad"}},
+        {"button": {"name": "BtnFLead", "w": "fill", "hidden": true}},
+        {"button": {"name": "BtnFInvite", "w": "fill", "hidden": true, "edge": "$ok", "color": "$ok"}}
       ]}},
       {"label": {"name": "FactionHint", "h": "$size.hint", "font": "hint", "color": "$faint",
         "note": "Останній у колонці, тобто внизу сторінки: тут же і підтвердження двох кроків."}}
     ]}}
     ]}},
-    {"panel": {"name": "InvitePane", "at": [20, 122], "size": [626, 60], "color": "$raised",
+    {"panel": {"name": "InvitePane", "at": [20, 122], "size": [602, 60], "color": "$raised",
       "hidden": true, "priority": 9, "click": true,
       "note": "Банер запрошення ПОВЕРХ списку своїх: 122 -- де колонка кладе FactionScroll (20 + 34 + 6 + 20 + 6 + 30 + 6). click: true -- банер ловить кліки сам, щоб вони не провалювались на рядок під ним.",
       "children": [
       {"panel": {"name": "InviteBar", "at": [0, 0], "size": [3, 60], "color": "$alert"}},
-      {"label": {"name": "InviteText", "at": [14, 4], "w": 596, "h": 22, "font": "hint", "color": "$alert"}},
+      {"label": {"name": "InviteText", "at": [14, 4], "w": 572, "h": 22, "font": "hint", "color": "$alert"}},
       {"button": {"name": "BtnFJoin", "at": [14, 30], "w": 140, "h": 24, "edge": "$ok", "color": "$ok"}},
       {"button": {"name": "BtnFRefuse", "at": [166, 30], "w": 140, "h": 24, "edge": "$bad", "color": "$bad"}}
     ]}}
