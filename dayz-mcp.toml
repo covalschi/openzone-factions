@@ -26,10 +26,14 @@ forbid       = ["Bad type", "Can't compile", "NULL pointer to instance"]
 error_regex  = ["SCRIPT\\s+\\(E\\).*OZF_", "\\[OpenZone\\] ERROR"]
 # Стенд ходить до моста по http на 127.0.0.1, і ядро чесно попереджає про це
 # кожен бут; на локальному стенді це стан, а не подія.
-noise        = ["Bridge.Url is not https"]
+noise        = ["Bridge.Url is not https", "module class \"OZ_Module_Radio\" is not in CfgVehicles"]
+# The second line: the PDA profiles of the stand name the radio module and this
+# stand carries no radio -- a fact of the stand, not of this mod.
 
-# Лічильники знімаються з першого реального бута цього стенду і дописуються
-# сюди навмисне (див. ядро та рацію); до того вердикт їх не перевіряє.
+# Знято з першого бута цього стенду 2026-09-04 18:18 (script_2026-09-04_18-17-49.log):
+# дев'ять фракцій у Factions.json стенду. Рухається лише навмисною правкою конфігу.
+[expect.counters]
+factions = 9
 
 [client]
 # The client runs with -filePatching and mod_build keeps @<Mod>/<Mod> as a junction
