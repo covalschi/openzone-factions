@@ -15,6 +15,18 @@ name = "openzone-factions"
 # <root>/OpenZone_Factions_PDA (вкладка «Фракція» в КПК) і
 # <root>/OpenZone_Factions_VPP (панель FACTIONS в адмінці).
 mods = ["OpenZone_Factions", "OpenZone_Factions_PDA", "OpenZone_Factions_VPP"]
+# The layout generator reads its tokens from the PDA REPOSITORY: the faction
+# page is the right half of a tab whose left half is drawn by OpenZone_PDA,
+# and two halves of one screen cannot own two palettes. Descriptions stay
+# here (ui/OpenZone_Factions_PDA/), the numbers they name come from there.
+#
+# The path is relative to this file, not absolute: `tokens` is a portable
+# key -- the loader refuses a [build] section in dayz-mcp.local.toml -- so a
+# machine path could not live in the half of the profile that is meant for
+# machine paths. Relative works for anyone who checks the series out the way
+# it is laid out, side by side under one directory.
+# No `sources`: every mod's config.cpp sits in <root>/<Mod>, the default.
+tokens = "../openzone-pda/ui/tokens.json"
 
 [expect]
 # Рядок, який мод друкує, коли фракції прочитані (OZF_Module).

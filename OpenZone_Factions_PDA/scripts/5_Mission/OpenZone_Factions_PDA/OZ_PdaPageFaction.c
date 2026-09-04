@@ -19,7 +19,6 @@ class OZ_PdaPageFaction : OZ_PdaPage
     private ref OZ_FactionState m_St;
     private Widget m_Rows;
     private ref array<Widget> m_RowWgts;
-    private int m_RowsY = 0;
     private string m_Picked = "";     // ім'я обраного члена
 
     // ДВА КРОКИ на кожну незворотну дію (ТЗ-4 R-C5.1): перший клік озброює
@@ -160,16 +159,20 @@ class OZ_PdaPageFaction : OZ_PdaPage
                 m_RowWgts[r].Unlink();
         }
         m_RowWgts.Clear();
-        m_RowsY = 0;
+        if (m_Rows)
+            m_Rows.Update();
 
         if (m_Rows && m_St.Members)
         {
             for (int i = 0; i < m_St.Members.Count(); i++)
                 MemberRow(m_St.Members[i]);
 
-            // Висота канви чесна: коли всі влазять, повзунок не потрібен.
-            // Ширина -- рядка фракції в правій половині спільної вкладки.
-            m_Rows.SetSize(616, m_RowsY);
+            // Стопка складається САМА: FactionRows -- WrapSpacer із «Size To
+            // Content V» 1, рядки в ньому пропорційні (size 1 32), і після
+            // Update() його висота дорівнює сумі рядків. Ні SetPos, ні
+            // SetSize тут більше немає -- і повзунок з'являється рівно тоді,
+            // коли рядки не влазять.
+            m_Rows.Update();
         }
 
         PaintButtons();
@@ -177,12 +180,10 @@ class OZ_PdaPageFaction : OZ_PdaPage
 
     private void MemberRow(OZ_FactionMember m)
     {
-        Widget w = GetGame().GetWorkspace().CreateWidgets("OpenZone_PDA/gui/layouts/oz_pda_faction_row.layout", m_Rows);
+        Widget w = GetGame().GetWorkspace().CreateWidgets("OpenZone_Factions_PDA/gui/layouts/oz_pda_faction_row.layout", m_Rows);
         if (!w)
             return;
 
-        w.SetPos(0, m_RowsY);
-        m_RowsY += 34;
         w.SetName(RowKey(m));
         w.SetUserID(8);
         m_RowWgts.Insert(w);
