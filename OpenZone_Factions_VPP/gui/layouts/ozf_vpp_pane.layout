@@ -1347,11 +1347,18 @@ FrameWidgetClass PaneFactions {
     }
    }
   }
-  TextWidgetClass WipeNote {
+  // Підпис під кнопкою WIPE PLAYER. Багаторядковий і з wrap 1: у TextWidget
+  // переносу немає взагалі, тож увесь рядок малювався 461 одиницю завширшки
+  // в коробці на 280 -- вилазив праворуч і перекреслював FacHint (зміряно
+  // галереєю 2026-09-04: 683x21 px у коробці 415x83 px, перетин 415x33 px).
+  // Місце тут затиснуте: кнопка над ним кінчається на y 454, FacHint
+  // починається на y 492, а праворуч на x 700 стоїть BtnRoster -- звідси
+  // 280x34 на (400, 456).
+  MultilineTextWidgetClass WipeNote {
    visible 1
    ignorepointer 1
-   position 400 460
-   size 280 56
+   position 400 456
+   size 280 34
    hexactpos 1
    vexactpos 1
    hexactsize 1
@@ -1363,6 +1370,7 @@ FrameWidgetClass PaneFactions {
    "exact text size" 10
    "text halign" left
    "text valign" top
+   wrap 1
    priority 3
   }
   PanelWidgetClass SecFacPBar {
