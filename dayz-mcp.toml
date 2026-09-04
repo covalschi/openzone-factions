@@ -1,0 +1,38 @@
+# Переносна половина профілю для dayz-agentic-modding-mcp.
+# Машинні шляхи живуть у dayz-mcp.local.toml, який не комітиться.
+#
+# Фракції ЖОРСТКО залежать від @OpenZone_Core через requiredAddons, а дві
+# склейки -- ще й від @OpenZone_PDA та @OpenZone_VPP відповідно. Усі сусіди
+# підставляються стенду через [mods] extra у локальному файлі. Без моста
+# фракцій не буває: звання, ростер і лідерство живуть у базі бота.
+
+[project]
+name = "openzone-factions"
+
+[build]
+# Порядок значущий: склейки жорстко вимагають базовий мод, і пакувати їх
+# раніше за нього немає сенсу. Джерела в <root>/OpenZone_Factions,
+# <root>/OpenZone_Factions_PDA (вкладка «Фракція» в КПК) і
+# <root>/OpenZone_Factions_VPP (панель FACTIONS в адмінці).
+mods = ["OpenZone_Factions", "OpenZone_Factions_PDA", "OpenZone_Factions_VPP"]
+
+[expect]
+# Рядок, який мод друкує, коли фракції прочитані (OZF_Module).
+ready_line   = "factions loaded"
+max_warnings = 0
+forbid       = ["Bad type", "Can't compile", "NULL pointer to instance"]
+# Помилки рушія про наші класи і помилки, які друкує сам мод (OZ_Log.Error
+# пише звичайним `SCRIPT :` із префіксом `[OpenZone] ERROR:`).
+error_regex  = ["SCRIPT\\s+\\(E\\).*OZF_", "\\[OpenZone\\] ERROR"]
+# Стенд ходить до моста по http на 127.0.0.1, і ядро чесно попереджає про це
+# кожен бут; на локальному стенді це стан, а не подія.
+noise        = ["Bridge.Url is not https"]
+
+# Лічильники знімаються з першого реального бута цього стенду і дописуються
+# сюди навмисне (див. ядро та рацію); до того вердикт їх не перевіряє.
+
+[client]
+# The client runs with -filePatching and mod_build keeps @<Mod>/<Mod> as a junction
+# to the source tree, so an edited .layout is read without repacking (the stand
+# config already carries allowFilePatching = 1).
+file_patching = true
