@@ -27,12 +27,12 @@
       {"hbox": {"h": "$size.button", "gap": 12, "children": [
         {"button": {"name": "BtnFPromote", "w": "fill", "hidden": true, "edge": "$ok", "color": "$ok"}},
         {"button": {"name": "BtnFDemote", "w": "fill", "hidden": true}},
-        {"button": {"name": "BtnFLeave", "w": "fill", "hidden": true, "edge": "$bad", "color": "$bad"}}
+        {"button": {"name": "BtnFLead", "w": "fill", "hidden": true}}
       ]}},
       {"hbox": {"h": "$size.button", "gap": 12, "children": [
+        {"button": {"name": "BtnFInvite", "w": "fill", "hidden": true, "edge": "$ok", "color": "$ok"}},
         {"button": {"name": "BtnFKick", "w": "fill", "hidden": true, "edge": "$bad", "color": "$bad"}},
-        {"button": {"name": "BtnFLead", "w": "fill", "hidden": true}},
-        {"button": {"name": "BtnFInvite", "w": "fill", "hidden": true, "edge": "$ok", "color": "$ok"}}
+        {"button": {"name": "BtnFLeave", "w": "fill", "hidden": true, "edge": "$bad", "color": "$bad"}}
       ]}},
       {"label": {"name": "FactionHint", "h": "$size.hint", "font": "hint", "color": "$faint",
         "note": "Останній у колонці, тобто внизу сторінки: тут же і підтвердження двох кроків."}}

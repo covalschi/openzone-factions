@@ -349,7 +349,7 @@ FrameWidgetClass OZ_PageFaction {
         }
        }
       }
-      ButtonWidgetClass BtnFLeave {
+      ButtonWidgetClass BtnFLead {
        visible 0
        position 409.333 384
        size 192.667 30
@@ -359,120 +359,6 @@ FrameWidgetClass OZ_PageFaction {
        vexactsize 1
        text ""
        priority 2
-       {
-        PanelWidgetClass BtnFLeaveEdge {
-         visible 1
-         ignorepointer 1
-         position -1 -1
-         size 194.667 32
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         color 0.88 0.32 0.32 1
-         priority 0
-         style rover_sim_colorable
-        }
-        PanelWidgetClass BtnFLeaveBg {
-         visible 1
-         ignorepointer 1
-         position 0 0
-         size 192.667 30
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         color 0.135 0.18 0.225 1
-         priority 1
-         style rover_sim_colorable
-        }
-        TextWidgetClass BtnFLeaveText {
-         visible 1
-         ignorepointer 1
-         position 0 0
-         size 192.667 30
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         color 0.88 0.32 0.32 1
-         priority 2
-         text ""
-         font "gui/fonts/sdf_MetronBook24"
-         "exact text" 1
-         "exact text size" 13
-         "text halign" center
-         "text valign" center
-        }
-       }
-      }
-      ButtonWidgetClass BtnFKick {
-       visible 0
-       position 0 420
-       size 192.667 30
-       hexactpos 1
-       vexactpos 1
-       hexactsize 1
-       vexactsize 1
-       text ""
-       priority 0
-       {
-        PanelWidgetClass BtnFKickEdge {
-         visible 1
-         ignorepointer 1
-         position -1 -1
-         size 194.667 32
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         color 0.88 0.32 0.32 1
-         priority 0
-         style rover_sim_colorable
-        }
-        PanelWidgetClass BtnFKickBg {
-         visible 1
-         ignorepointer 1
-         position 0 0
-         size 192.667 30
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         color 0.135 0.18 0.225 1
-         priority 1
-         style rover_sim_colorable
-        }
-        TextWidgetClass BtnFKickText {
-         visible 1
-         ignorepointer 1
-         position 0 0
-         size 192.667 30
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         color 0.88 0.32 0.32 1
-         priority 2
-         text ""
-         font "gui/fonts/sdf_MetronBook24"
-         "exact text" 1
-         "exact text size" 13
-         "text halign" center
-         "text valign" center
-        }
-       }
-      }
-      ButtonWidgetClass BtnFLead {
-       visible 0
-       position 204.667 420
-       size 192.667 30
-       hexactpos 1
-       vexactpos 1
-       hexactsize 1
-       vexactsize 1
-       text ""
-       priority 1
        {
         PanelWidgetClass BtnFLeadEdge {
          visible 1
@@ -522,14 +408,14 @@ FrameWidgetClass OZ_PageFaction {
       }
       ButtonWidgetClass BtnFInvite {
        visible 0
-       position 409.333 420
+       position 0 420
        size 192.667 30
        hexactpos 1
        vexactpos 1
        hexactsize 1
        vexactsize 1
        text ""
-       priority 2
+       priority 0
        {
         PanelWidgetClass BtnFInviteEdge {
          visible 1
@@ -567,6 +453,120 @@ FrameWidgetClass OZ_PageFaction {
          hexactsize 1
          vexactsize 1
          color 0.39 0.76 0.36 1
+         priority 2
+         text ""
+         font "gui/fonts/sdf_MetronBook24"
+         "exact text" 1
+         "exact text size" 13
+         "text halign" center
+         "text valign" center
+        }
+       }
+      }
+      ButtonWidgetClass BtnFKick {
+       visible 0
+       position 204.667 420
+       size 192.667 30
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       text ""
+       priority 1
+       {
+        PanelWidgetClass BtnFKickEdge {
+         visible 1
+         ignorepointer 1
+         position -1 -1
+         size 194.667 32
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         color 0.88 0.32 0.32 1
+         priority 0
+         style rover_sim_colorable
+        }
+        PanelWidgetClass BtnFKickBg {
+         visible 1
+         ignorepointer 1
+         position 0 0
+         size 192.667 30
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         color 0.135 0.18 0.225 1
+         priority 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass BtnFKickText {
+         visible 1
+         ignorepointer 1
+         position 0 0
+         size 192.667 30
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         color 0.88 0.32 0.32 1
+         priority 2
+         text ""
+         font "gui/fonts/sdf_MetronBook24"
+         "exact text" 1
+         "exact text size" 13
+         "text halign" center
+         "text valign" center
+        }
+       }
+      }
+      ButtonWidgetClass BtnFLeave {
+       visible 0
+       position 409.333 420
+       size 192.667 30
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       text ""
+       priority 2
+       {
+        PanelWidgetClass BtnFLeaveEdge {
+         visible 1
+         ignorepointer 1
+         position -1 -1
+         size 194.667 32
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         color 0.88 0.32 0.32 1
+         priority 0
+         style rover_sim_colorable
+        }
+        PanelWidgetClass BtnFLeaveBg {
+         visible 1
+         ignorepointer 1
+         position 0 0
+         size 192.667 30
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         color 0.135 0.18 0.225 1
+         priority 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass BtnFLeaveText {
+         visible 1
+         ignorepointer 1
+         position 0 0
+         size 192.667 30
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         color 0.88 0.32 0.32 1
          priority 2
          text ""
          font "gui/fonts/sdf_MetronBook24"
