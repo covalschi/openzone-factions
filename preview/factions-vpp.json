@@ -5,9 +5,9 @@
 {"op":"text","name":"FacLabel","text":"Долг","nth":1},
 {"op":"text","name":"FacLimit","text":"24","nth":1},
 {"op":"text","name":"InfoName","text":"Iскра","nth":1},
-{"op":"text","name":"InfoDiscord","text":"discord: iskra","nth":1},
-{"op":"text","name":"InfoSteam","text":"steam: 76561198012345678","nth":1},
-{"op":"text","name":"InfoFaction","text":"faction: одинак / Долг ^сержант [leader]","nth":1},
-{"op":"text","name":"InfoRank","text":"stalker rank: ветеран","nth":1},
-{"op":"text","name":"InfoTraits","text":"traits: провідник, механік","nth":1}
+{"op":"text","name":"InfoDiscord","text":"iskra","nth":1},
+{"op":"text","name":"InfoSteam","text":"76561198012345678","nth":1},
+{"op":"text","name":"InfoFaction","text":"одинак / Долг ^сержант [leader]","nth":1},
+{"op":"text","name":"InfoRank","text":"ветеран","nth":1},
+{"op":"text","name":"InfoTraits","text":"провідник, механік","nth":1}
 ]}

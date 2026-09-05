@@ -493,15 +493,38 @@ class OZ_Factions
             return;
         }
 
-        // Копія під старим ім'ям лишається на диску (вимога міграції), а сам
-        // старий шлях прибираємо, щоб другий старт бачив рівно один файл
-        // реєстру. Обидва виклики -- під $profile:, як CopyFile/DeleteFile і
-        // вимагають.
-        CopyFile(oldPath, movedPath);
-        DeleteFile(oldPath);
+        // Копія під старим ім'ям лишається на диску (вимога міграції); якщо
+        // саме вона не вдалася, старий файл лишаємо на місці й не видаляємо
+        // його -- інакше вміст пережив би тільки під новим ім'ям, а обіцяний
+        // .moved так і не з'явився б. Обидва виклики -- під $profile:, як
+        // CopyFile/DeleteFile і вимагають.
+        bool movedOk = CopyFile(oldPath, movedPath);
+        if (!movedOk)
+        {
+            string warnMoved = "factions: cannot copy " + oldPath + " to " + movedPath;
+            warnMoved += " - keeping " + oldPath + " in place instead of deleting it";
+            OZ_Log.Warn(warnMoved);
+        }
+
+        if (movedOk)
+        {
+            // Видаляємо старий шлях лише тоді, коли копія під .moved вдалася.
+            if (!DeleteFile(oldPath))
+            {
+                // Два файли реєстру лишаються на диску: newPath -- єдине
+                // джерело правди відтепер, а вартовий на початку функції
+                // (FileExist(newPath) вище) більше не чіпає oldPath на
+                // наступних стартах -- він бачить лише наявність нового
+                // файла, тож повторної спроби видалення не буде.
+                string warnDelete = "factions: cannot delete " + oldPath + " after copying it to " + newPath;
+                warnDelete += " - two registry files remain, " + newPath + " is the registry from now on";
+                OZ_Log.Warn(warnDelete);
+            }
+        }
 
         string done = "factions: " + oldPath + " renamed to " + newPath;
-        done += " (old file kept as " + movedPath + ")";
+        if (movedOk)
+            done += " (old file kept as " + movedPath + ")";
         OZ_Log.Info(done);
     }
 
