@@ -47,7 +47,7 @@ and the number goes in by hand.
 OpenZone_Factions/          the mod
 OpenZone_Factions_PDA/      glue: PDA tab
 OpenZone_Factions_VPP/      glue: VPP pane
-ui/                         layout descriptions (tokens come from ../openzone-pda/ui/tokens.json -- check the series out side by side)
+ui/                         layout descriptions (tokens come from ../openzone-core/ui/tokens.json -- check the series out side by side)
 preview/                    gallery index for the UI eyes of dayz-agentic-modding-mcp
 dayz-mcp.toml               build and boot profile (machine paths in dayz-mcp.local.toml, not committed)
 ```
