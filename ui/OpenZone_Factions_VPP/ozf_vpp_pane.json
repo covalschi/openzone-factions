@@ -6,17 +6,16 @@
     "note": "Hidden: ShowPane shows the open tab's pane and hides the rest.",
     "children": [
       {"vbox": {"name": "FacBody", "gap": "$space.gap",
-        "note": "The whole vertical budget, against 524 - 2 * 20 = 484 units: 320 (the two columns) + 10 + 122 (the roster band) + 10 + 22 (FacHint) = 484, nothing left over. Each column is 470 wide, 20 apart, 470 + 20 + 470 = 960 = 1000 - 2 * 20. Inside a column, seven children over six gaps of 6 leave 320 - 172 - 36 = 112 units for the one child that fills -- the faction list on the left, the player card on the right. The roster band could not also carry a section head: 30 + 6 more would cut FacRoster from four visible rows to three, and four rows of players are worth more than a second caption over a list whose buttons already name it.",
+        "note": "The whole vertical budget, against 524 - 2 * 20 = 484 units: 320 (the two columns) + 10 + 122 (the roster band) + 10 + 22 (FacHint) = 484, nothing left over. Each column is 470 wide, 20 apart, 470 + 20 + 470 = 960 = 1000 - 2 * 20. Neither column carries a section head: SecFacL (FACTIONS) and SecFacR (PLAYER) would each cost 30 + 6 = 36, and the list's own buttons and the card's own captions already name their column. Inside a column, six children over five gaps of 6 leave 320 - 142 - 30 = 148 units for the one child that fills -- the faction list on the left, the player card on the right. The roster band carries no section head either, for the same reason and the same 36 units: four rows of players are worth more than a caption over a list whose buttons already name it.",
         "children": [
           {"hbox": {"name": "FacCols", "h": 320, "gap": "$space.column", "children": [
 
             {"vbox": {"name": "FacEditCol", "w": 470, "gap": "$space.tight", "children": [
-              {"section": {"name": "SecFacL", "text": "FACTIONS"}},
               {"field": {"name": "FacSearch",
                 "note": "Filter over the list below; OnChange rebuilds FacCfgList on every keystroke."}},
               {"listbox": {"name": "FacCfgList", "h": "fill", "font": "field", "color": "$text",
-                "props": {"style": "NoScrollBar", "title visible": false, "highlight row": true, "lines": 4},
-                "note": "The engine's own listbox, filled by AddItem. Four lines over 112 units keeps a 28-unit row against the 30 of the hand-written pane; the search field above it is what reaches a faction the four rows do not show, because NoScrollBar is the old prop and stays."}},
+                "props": {"title visible": false, "highlight row": true, "lines": 5},
+                "note": "The engine's own listbox, filled by AddItem. Dropping SecFacL frees 30 + 6 = 36 units, so the fill goes 112 -> 148 and five lines fit at 148 / 5 = 29.6 units a row -- better than the hand-written pane's 30. NoScrollBar is also dropped: it cost 10 units of width and nothing in height, and without it an admin with nine factions can drag to 6-9 instead of reaching them only by typing in FacSearch."}},
               {"hrow": {"h": "$size.field", "children": [
                 {"label": {"name": "FacSlugLbl", "w": "$vpp.labelW", "text": "slug", "font": "small", "color": "$muted"}},
                 {"field": {"name": "FacSlug", "w": "$vpp.fieldW"}}
@@ -30,41 +29,40 @@
                 {"field": {"name": "FacLimit", "w": "$vpp.fieldW"}}
               ]}},
               {"hbox": {"name": "FacFormActs", "h": "$size.button", "gap": "$space.tight",
-                "note": "All four in one row: 148 + 60 + 118 + 126 = 452 plus three gaps of 6 = 470. The widest caption is LEADER POST: yes, 16 characters -- the hand-written pane fitted it into 130 units at 12 point, so 148 units at the 13 of $font.small has room, and REMOVE FACTION at 14 characters has 126. Two rows of two would cost 36 units and the faction list has none to give.",
+                "note": "All four in one row: 140 + 54 + 118 + 140 = 452 plus three gaps of 6 = 470. Widths from the skill's measured letter costs (uppercase 9.55 units at 13 pt, 86% of the 11.1 at 15 pt): LEADER POST: yes is 10 uppercase letters plus yes, a colon and two spaces, about 130 in a 140 box (10 spare); REMOVE FACTION is 13 uppercase letters and one space, about 128 in a 140 box (12 spare); SAVE FACTION keeps its 118 for about 109 (9 spare); NEW needs about 29 for three uppercase letters, so 54 is ample. BtnFacLeader's old box really was 130 units at 12 point (7a68abf lines 275-291), but BtnFacDel's was 169 at 12 point (lines 446-462), not 130 as this note used to say -- REMOVE FACTION had lost a quarter of its width while gaining a point size. Two rows of two would cost 36 units and the faction list has none to give.",
                 "children": [
-                  {"button": {"name": "BtnFacLeader", "w": 148, "text": "LEADER POST: yes"}},
-                  {"button": {"name": "BtnFacNew", "w": 60, "text": "NEW"}},
+                  {"button": {"name": "BtnFacLeader", "w": 140, "text": "LEADER POST: yes"}},
+                  {"button": {"name": "BtnFacNew", "w": 54, "text": "NEW"}},
                   {"button": {"name": "BtnFacSave", "w": 118, "text": "SAVE FACTION", "edge": "$ok", "color": "$ok"}},
-                  {"button": {"name": "BtnFacDel", "w": 126, "text": "REMOVE FACTION", "edge": "$bad", "color": "$bad"}}
+                  {"button": {"name": "BtnFacDel", "w": 140, "text": "REMOVE FACTION", "edge": "$bad", "color": "$bad"}}
                 ]}}
             ]}},
 
             {"vbox": {"name": "FacPlayerCol", "w": 470, "gap": "$space.tight", "children": [
-              {"section": {"name": "SecFacR", "text": "PLAYER"}},
               {"vbox": {"name": "FacCard", "h": "fill",
-                "note": "Six caption-and-value rows, 18 units each = 108 inside the 112 this column has left. FillPlayerCard still writes its own word in front of five of the six values (discord:, steam:, faction:, stalker rank:, traits:) -- the captions here make those prefixes redundant, and trimming them is a one-line change in OZF_VppPane.c that this layout-only commit deliberately does not make. InfoName carries the empty-selection line; the script's own version of it still says on the right and is stale now that the roster sits below.",
+                "note": "Six caption-and-value rows at $size.hint (22) each = 132, inside the 148 this column has left once SecFacR is dropped -- 18 units under a 13-pt font undershoots the generator's own text_overflow-safe height of size + 9 = 22, so 132 <= 148 (16 spare) is the number to build, not the old 108 <= 112. FillPlayerCard no longer writes discord:/steam:/faction:/stalker rank:/traits: in front of the five values -- the captions here already say it. InfoName's empty-selection default now matches the script: pick a player in the roster below.",
                 "children": [
-                  {"hrow": {"h": 18, "children": [
+                  {"hrow": {"h": "$size.hint", "children": [
                     {"label": {"name": "InfoNameLbl", "w": 110, "text": "name", "font": "small", "color": "$muted"}},
                     {"label": {"name": "InfoName", "w": 360, "text": "pick a player in the roster below", "font": "small", "color": "$text"}}
                   ]}},
-                  {"hrow": {"h": 18, "children": [
+                  {"hrow": {"h": "$size.hint", "children": [
                     {"label": {"name": "InfoDiscordLbl", "w": 110, "text": "discord", "font": "small", "color": "$muted"}},
                     {"label": {"name": "InfoDiscord", "w": 360, "font": "small", "color": "$text"}}
                   ]}},
-                  {"hrow": {"h": 18, "children": [
+                  {"hrow": {"h": "$size.hint", "children": [
                     {"label": {"name": "InfoSteamLbl", "w": 110, "text": "steam", "font": "small", "color": "$muted"}},
                     {"label": {"name": "InfoSteam", "w": 360, "font": "small", "color": "$text"}}
                   ]}},
-                  {"hrow": {"h": 18, "children": [
+                  {"hrow": {"h": "$size.hint", "children": [
                     {"label": {"name": "InfoFactionLbl", "w": 110, "text": "faction", "font": "small", "color": "$muted"}},
                     {"label": {"name": "InfoFaction", "w": 360, "font": "small", "color": "$text"}}
                   ]}},
-                  {"hrow": {"h": 18, "children": [
+                  {"hrow": {"h": "$size.hint", "children": [
                     {"label": {"name": "InfoRankLbl", "w": 110, "text": "rank", "font": "small", "color": "$muted"}},
                     {"label": {"name": "InfoRank", "w": 360, "font": "small", "color": "$text"}}
                   ]}},
-                  {"hrow": {"h": 18, "children": [
+                  {"hrow": {"h": "$size.hint", "children": [
                     {"label": {"name": "InfoTraitsLbl", "w": 110, "text": "traits", "font": "small", "color": "$muted"}},
                     {"label": {"name": "InfoTraits", "w": 360, "font": "small", "color": "$text"}}
                   ]}}

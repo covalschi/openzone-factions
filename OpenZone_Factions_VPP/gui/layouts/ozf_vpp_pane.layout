@@ -11,7 +11,7 @@ FrameWidgetClass PaneFactions {
  vexactsize 1
  priority 2
  {
-  // The whole vertical budget, against 524 - 2 * 20 = 484 units: 320 (the two columns) + 10 + 122 (the roster band) + 10 + 22 (FacHint) = 484, nothing left over. Each column is 470 wide, 20 apart, 470 + 20 + 470 = 960 = 1000 - 2 * 20. Inside a column, seven children over six gaps of 6 leave 320 - 172 - 36 = 112 units for the one child that fills -- the faction list on the left, the player card on the right. The roster band could not also carry a section head: 30 + 6 more would cut FacRoster from four visible rows to three, and four rows of players are worth more than a second caption over a list whose buttons already name it.
+  // The whole vertical budget, against 524 - 2 * 20 = 484 units: 320 (the two columns) + 10 + 122 (the roster band) + 10 + 22 (FacHint) = 484, nothing left over. Each column is 470 wide, 20 apart, 470 + 20 + 470 = 960 = 1000 - 2 * 20. Neither column carries a section head: SecFacL (FACTIONS) and SecFacR (PLAYER) would each cost 30 + 6 = 36, and the list's own buttons and the card's own captions already name their column. Inside a column, six children over five gaps of 6 leave 320 - 142 - 30 = 148 units for the one child that fills -- the faction list on the left, the player card on the right. The roster band carries no section head either, for the same reason and the same 36 units: four rows of players are worth more than a caption over a list whose buttons already name it.
   FrameWidgetClass FacBody {
    visible 1
    position 20 20
@@ -42,73 +42,17 @@ FrameWidgetClass PaneFactions {
        vexactsize 1
        priority 0
        {
-        FrameWidgetClass SecFacL {
-         visible 1
-         position 0 0
-         size 470 30
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         priority 0
-         {
-          PanelWidgetClass SecFacLBar {
-           visible 1
-           ignorepointer 1
-           position 0 4
-           size 3 16
-           hexactpos 1
-           vexactpos 1
-           hexactsize 1
-           vexactsize 1
-           color 0.31 0.71 0.91 1
-           priority 0
-           style rover_sim_colorable
-          }
-          TextWidgetClass SecFacLLbl {
-           visible 1
-           ignorepointer 1
-           position 12 0
-           size 458 24
-           hexactpos 1
-           vexactpos 1
-           hexactsize 1
-           vexactsize 1
-           color 0.31 0.71 0.91 1
-           priority 1
-           text "FACTIONS"
-           font "gui/fonts/sdf_MetronBook24"
-           "exact text" 1
-           "exact text size" 16
-           "text halign" left
-           "text valign" center
-          }
-          PanelWidgetClass SecFacLRule {
-           visible 1
-           ignorepointer 1
-           position 0 29
-           size 470 1
-           hexactpos 1
-           vexactpos 1
-           hexactsize 1
-           vexactsize 1
-           color 1 1 1 0.08
-           priority 2
-           style rover_sim_colorable
-          }
-         }
-        }
         // Filter over the list below; OnChange rebuilds FacCfgList on every keystroke.
         PanelWidgetClass FacSearchFrame {
          visible 1
-         position 0 36
+         position 0 0
          size 470 28
          hexactpos 1
          vexactpos 1
          hexactsize 1
          vexactsize 1
          color 0.22 0.3 0.38 1
-         priority 1
+         priority 0
          style rover_sim_colorable
          {
           PanelWidgetClass FacSearchFill {
@@ -141,23 +85,22 @@ FrameWidgetClass PaneFactions {
           }
          }
         }
-        // The engine's own listbox, filled by AddItem. Four lines over 112 units keeps a 28-unit row against the 30 of the hand-written pane; the search field above it is what reaches a faction the four rows do not show, because NoScrollBar is the old prop and stays.
+        // The engine's own listbox, filled by AddItem. Dropping SecFacL frees 30 + 6 = 36 units, so the fill goes 112 -> 148 and five lines fit at 148 / 5 = 29.6 units a row -- better than the hand-written pane's 30. NoScrollBar is also dropped: it cost 10 units of width and nothing in height, and without it an admin with nine factions can drag to 6-9 instead of reaching them only by typing in FacSearch.
         TextListboxWidgetClass FacCfgList {
          visible 1
-         position 0 70
-         size 470 112
+         position 0 34
+         size 470 148
          hexactpos 1
          vexactpos 1
          hexactsize 1
          vexactsize 1
          color 0.9 0.93 0.95 1
-         priority 2
+         priority 1
          font "gui/fonts/MetronBook14"
          "exact text" 1
-         style NoScrollBar
          "title visible" 0
          "highlight row" 1
-         lines 4
+         lines 5
         }
         GridSpacerWidgetClass HRow1 {
          visible 1
@@ -167,7 +110,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 3
+         priority 2
          Padding 0
          Margin 0
          "Size To Content H" 1
@@ -245,7 +188,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 4
+         priority 3
          Padding 0
          Margin 0
          "Size To Content H" 1
@@ -323,7 +266,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 5
+         priority 4
          Padding 0
          Margin 0
          "Size To Content H" 1
@@ -393,7 +336,7 @@ FrameWidgetClass PaneFactions {
           }
          }
         }
-        // All four in one row: 148 + 60 + 118 + 126 = 452 plus three gaps of 6 = 470. The widest caption is LEADER POST: yes, 16 characters -- the hand-written pane fitted it into 130 units at 12 point, so 148 units at the 13 of $font.small has room, and REMOVE FACTION at 14 characters has 126. Two rows of two would cost 36 units and the faction list has none to give.
+        // All four in one row: 140 + 54 + 118 + 140 = 452 plus three gaps of 6 = 470. Widths from the skill's measured letter costs (uppercase 9.55 units at 13 pt, 86% of the 11.1 at 15 pt): LEADER POST: yes is 10 uppercase letters plus yes, a colon and two spaces, about 130 in a 140 box (10 spare); REMOVE FACTION is 13 uppercase letters and one space, about 128 in a 140 box (12 spare); SAVE FACTION keeps its 118 for about 109 (9 spare); NEW needs about 29 for three uppercase letters, so 54 is ample. BtnFacLeader's old box really was 130 units at 12 point (7a68abf lines 275-291), but BtnFacDel's was 169 at 12 point (lines 446-462), not 130 as this note used to say -- REMOVE FACTION had lost a quarter of its width while gaining a point size. Two rows of two would cost 36 units and the faction list has none to give.
         FrameWidgetClass FacFormActs {
          visible 1
          position 0 290
@@ -402,12 +345,12 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 6
+         priority 5
          {
           ButtonWidgetClass BtnFacLeader {
            visible 1
            position 0 0
-           size 148 30
+           size 140 30
            hexactpos 1
            vexactpos 1
            hexactsize 1
@@ -419,7 +362,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position -1 -1
-             size 150 32
+             size 142 32
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -432,7 +375,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 148 30
+             size 140 30
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -445,7 +388,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 148 30
+             size 140 30
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -463,8 +406,8 @@ FrameWidgetClass PaneFactions {
           }
           ButtonWidgetClass BtnFacNew {
            visible 1
-           position 154 0
-           size 60 30
+           position 146 0
+           size 54 30
            hexactpos 1
            vexactpos 1
            hexactsize 1
@@ -476,7 +419,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position -1 -1
-             size 62 32
+             size 56 32
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -489,7 +432,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 60 30
+             size 54 30
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -502,7 +445,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 60 30
+             size 54 30
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -520,7 +463,7 @@ FrameWidgetClass PaneFactions {
           }
           ButtonWidgetClass BtnFacSave {
            visible 1
-           position 220 0
+           position 206 0
            size 118 30
            hexactpos 1
            vexactpos 1
@@ -577,8 +520,8 @@ FrameWidgetClass PaneFactions {
           }
           ButtonWidgetClass BtnFacDel {
            visible 1
-           position 344 0
-           size 126 30
+           position 330 0
+           size 140 30
            hexactpos 1
            vexactpos 1
            hexactsize 1
@@ -590,7 +533,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position -1 -1
-             size 128 32
+             size 142 32
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -603,7 +546,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 126 30
+             size 140 30
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -616,7 +559,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 126 30
+             size 140 30
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -646,72 +589,16 @@ FrameWidgetClass PaneFactions {
        vexactsize 1
        priority 1
        {
-        FrameWidgetClass SecFacR {
+        // Six caption-and-value rows at $size.hint (22) each = 132, inside the 148 this column has left once SecFacR is dropped -- 18 units under a 13-pt font undershoots the generator's own text_overflow-safe height of size + 9 = 22, so 132 <= 148 (16 spare) is the number to build, not the old 108 <= 112. FillPlayerCard no longer writes discord:/steam:/faction:/stalker rank:/traits: in front of the five values -- the captions here already say it. InfoName's empty-selection default now matches the script: pick a player in the roster below.
+        FrameWidgetClass FacCard {
          visible 1
          position 0 0
-         size 470 30
+         size 470 148
          hexactpos 1
          vexactpos 1
          hexactsize 1
          vexactsize 1
          priority 0
-         {
-          PanelWidgetClass SecFacRBar {
-           visible 1
-           ignorepointer 1
-           position 0 4
-           size 3 16
-           hexactpos 1
-           vexactpos 1
-           hexactsize 1
-           vexactsize 1
-           color 0.31 0.71 0.91 1
-           priority 0
-           style rover_sim_colorable
-          }
-          TextWidgetClass SecFacRLbl {
-           visible 1
-           ignorepointer 1
-           position 12 0
-           size 458 24
-           hexactpos 1
-           vexactpos 1
-           hexactsize 1
-           vexactsize 1
-           color 0.31 0.71 0.91 1
-           priority 1
-           text "PLAYER"
-           font "gui/fonts/sdf_MetronBook24"
-           "exact text" 1
-           "exact text size" 16
-           "text halign" left
-           "text valign" center
-          }
-          PanelWidgetClass SecFacRRule {
-           visible 1
-           ignorepointer 1
-           position 0 29
-           size 470 1
-           hexactpos 1
-           vexactpos 1
-           hexactsize 1
-           vexactsize 1
-           color 1 1 1 0.08
-           priority 2
-           style rover_sim_colorable
-          }
-         }
-        }
-        // Six caption-and-value rows, 18 units each = 108 inside the 112 this column has left. FillPlayerCard still writes its own word in front of five of the six values (discord:, steam:, faction:, stalker rank:, traits:) -- the captions here make those prefixes redundant, and trimming them is a one-line change in OZF_VppPane.c that this layout-only commit deliberately does not make. InfoName carries the empty-selection line; the script's own version of it still says on the right and is stale now that the roster sits below.
-        FrameWidgetClass FacCard {
-         visible 1
-         position 0 36
-         size 470 112
-         hexactpos 1
-         vexactpos 1
-         hexactsize 1
-         vexactsize 1
-         priority 1
          {
           GridSpacerWidgetClass HRow4 {
            visible 1
@@ -733,7 +620,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 110 18
+             size 110 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -751,7 +638,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 360 18
+             size 360 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -769,7 +656,7 @@ FrameWidgetClass PaneFactions {
           }
           GridSpacerWidgetClass HRow5 {
            visible 1
-           position 0 18
+           position 0 22
            size 0 0
            hexactpos 1
            vexactpos 1
@@ -787,7 +674,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 110 18
+             size 110 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -805,7 +692,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 360 18
+             size 360 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -823,7 +710,7 @@ FrameWidgetClass PaneFactions {
           }
           GridSpacerWidgetClass HRow6 {
            visible 1
-           position 0 36
+           position 0 44
            size 0 0
            hexactpos 1
            vexactpos 1
@@ -841,7 +728,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 110 18
+             size 110 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -859,7 +746,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 360 18
+             size 360 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -877,7 +764,7 @@ FrameWidgetClass PaneFactions {
           }
           GridSpacerWidgetClass HRow7 {
            visible 1
-           position 0 54
+           position 0 66
            size 0 0
            hexactpos 1
            vexactpos 1
@@ -895,7 +782,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 110 18
+             size 110 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -913,7 +800,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 360 18
+             size 360 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -931,7 +818,7 @@ FrameWidgetClass PaneFactions {
           }
           GridSpacerWidgetClass HRow8 {
            visible 1
-           position 0 72
+           position 0 88
            size 0 0
            hexactpos 1
            vexactpos 1
@@ -949,7 +836,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 110 18
+             size 110 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -967,7 +854,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 360 18
+             size 360 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -985,7 +872,7 @@ FrameWidgetClass PaneFactions {
           }
           GridSpacerWidgetClass HRow9 {
            visible 1
-           position 0 90
+           position 0 110
            size 0 0
            hexactpos 1
            vexactpos 1
@@ -1003,7 +890,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 110 18
+             size 110 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -1021,7 +908,7 @@ FrameWidgetClass PaneFactions {
              visible 1
              ignorepointer 1
              position 0 0
-             size 360 18
+             size 360 22
              hexactpos 1
              vexactpos 1
              hexactsize 1
@@ -1048,7 +935,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 2
+         priority 1
          {
           ButtonWidgetClass BtnRank {
            visible 1
@@ -1231,7 +1118,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 3
+         priority 2
          {
           ButtonWidgetClass BtnFRank {
            visible 1
@@ -1414,7 +1301,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 4
+         priority 3
          {
           ButtonWidgetClass BtnTrait {
            visible 1
@@ -1597,7 +1484,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 5
+         priority 4
          Padding 0
          Margin 0
          "Size To Content H" 1
@@ -1816,7 +1703,7 @@ FrameWidgetClass PaneFactions {
          vexactpos 1
          hexactsize 1
          vexactsize 1
-         priority 6
+         priority 5
          {
           ButtonWidgetClass BtnWipe {
            visible 1

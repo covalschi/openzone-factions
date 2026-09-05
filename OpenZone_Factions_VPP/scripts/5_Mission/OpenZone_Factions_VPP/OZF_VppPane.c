@@ -398,7 +398,7 @@ modded class OZ_VppAdminMenu
             if (m_RosterPicked < 0 || m_RosterPicked >= m_RosterNames.Count())
             {
                 if (nameT)
-                    nameT.SetText("pick a player on the right");
+                    nameT.SetText("pick a player in the roster below");
                 if (discordT)
                     discordT.SetText("");
                 if (steamT)
@@ -427,11 +427,11 @@ modded class OZ_VppAdminMenu
                 string dn = m_RosterDNames[i];
                 if (dn == "")
                     dn = "-";
-                discordT.SetText("discord: " + dn);
+                discordT.SetText(dn);
             }
 
             if (steamT)
-                steamT.SetText("steam: " + m_RosterUids[i]);
+                steamT.SetText(m_RosterUids[i]);
 
             if (facT)
             {
@@ -451,7 +451,7 @@ modded class OZ_VppAdminMenu
                     if (m_RosterLeads[i])
                         fac += "  [leader]";
                 }
-                facT.SetText("faction: " + fac);
+                facT.SetText(fac);
             }
 
             if (rankT)
@@ -459,7 +459,7 @@ modded class OZ_VppAdminMenu
                 string rk = m_RosterRanks[i];
                 if (rk == "")
                     rk = "-";
-                rankT.SetText("stalker rank: " + rk);
+                rankT.SetText(rk);
             }
 
             if (traitsT)
@@ -467,7 +467,7 @@ modded class OZ_VppAdminMenu
                 string tr = m_RosterTraits[i];
                 if (tr == "")
                     tr = "-";
-                traitsT.SetText("traits: " + tr);
+                traitsT.SetText(tr);
             }
         }
 
