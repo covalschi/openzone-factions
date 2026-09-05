@@ -252,7 +252,7 @@ class OZF_Identity : OZ_IdentityService
 
     // Перший вхід: базова фракція з'являється тут і більше ніде.
     //
-    // «Яка саме» -- перша з BaseFaction: true в порядку OZ_Core_Factions.json
+    // «Яка саме» -- перша з BaseFaction: true в порядку OZ_Factions.json
     // (ТЗ-1 R5.2). Порядок файлу і є відповіддю: перевпорядкувати його адмін
     // уміє, а окреме поле «головна базова» було б другим джерелом правди про
     // одне й те саме.
@@ -275,7 +275,7 @@ class OZF_Identity : OZ_IdentityService
             if (!s_WarnedNoBase)
             {
                 s_WarnedNoBase = true;
-                OZ_Log.Warn("factions: no faction is marked BaseFaction in OZ_Core_Factions.json - nobody gets a base faction, and spawn zones fall back to staging");
+                OZ_Log.Warn("factions: no faction is marked BaseFaction in OZ_Factions.json - nobody gets a base faction, and spawn zones fall back to staging");
             }
             return;
         }

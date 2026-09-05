@@ -31,6 +31,11 @@ the PDA or without VPP simply leaves that PBO out.
 
 ## Upgrading
 
+The faction registry file was renamed from `OZ_Core_Factions.json` to
+`OZ_Factions.json` (2026-09-05) -- a leftover name from when the table still
+lived in Core. The mod renames the file itself on its first boot after the
+upgrade and keeps the old content as `OZ_Core_Factions.json.moved`.
+
 Run this mod on the **first** boot after upgrading Core: the invitation lifetime
 moved out of `OZ_Core_Settings.json` into this mod's own
 `$profile:OpenZone\OZ_Factions_Settings.json`, and the copy is made once, from

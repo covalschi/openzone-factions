@@ -338,7 +338,7 @@ class OZF_LoadoutService : OZ_LoadoutService
                 // -- це одруківка адміна, і карати за неї гравця не можна.
                 if (OZ_Factions.FirstBaseId() == "")
                 {
-                    OZ_Log.Warn("loadouts: no base faction is declared in OZ_Core_Factions.json - the spawn of " + uid + " is left to the mission");
+                    OZ_Log.Warn("loadouts: no base faction is declared in OZ_Factions.json - the spawn of " + uid + " is left to the mission");
                     return OZ_LoadoutVerdict.NO_OPINION;
                 }
                 return OZ_LoadoutVerdict.NAKED;

@@ -48,7 +48,7 @@ noise        = ["Bridge.Url is not https", "module class \"OZ_Module_Radio\" is 
 # nothing was ever lost; the admin reads it in the log, the verdict does not fail.
 
 # No counter for the faction count: the ready line prints how many factions the
-# server read from its own $profile:OpenZone\OZ_Core_Factions.json -- nine on this
+# server read from its own $profile:OpenZone\OZ_Factions.json -- nine on this
 # stand, ten from LoadDefaults on a fresh profile -- and a number that depends on
 # the server's data file is not a fact the build can promise. The ready line
 # still proves the load; the number is read by eye in the log.

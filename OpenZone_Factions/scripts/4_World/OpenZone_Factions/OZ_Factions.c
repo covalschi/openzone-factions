@@ -388,7 +388,7 @@ class OZ_FactionStand
 //
 //     OZ_Factions.Bind(new MyFactionProvider());
 //
-// Повертати треба id із OZ_Core_Factions.json. Незнайоме id ми покажемо ЯК Є -- краще
+// Повертати треба id із OZ_Factions.json. Незнайоме id ми покажемо ЯК Є -- краще
 // чуже слово на екрані, ніж мовчазна підміна на «одинак».
 //
 // САМЕ УГРУПОВАННЯ, А НЕ БАЗОВА ФРАКЦІЯ. Чужі постачальники (Expansion) знають
@@ -455,8 +455,54 @@ class OZ_Factions
     // (порівняння mtime неможливе -- рушій віддає лише FileAttr).
     static void Reload()
     {
+        MigrateFileName();
+
         s_Cfg = new OZ_FactionsConfig();
-        OZ_ConfigLoader<OZ_FactionsConfig>.Load(OZ_Const.PROFILE_DIR + "\\OZ_Core_Factions.json", "factions", s_Cfg);
+        OZ_ConfigLoader<OZ_FactionsConfig>.Load(OZ_Const.PROFILE_DIR + "\\OZ_Factions.json", "factions", s_Cfg);
+    }
+
+    // Одноразове перейменування файла реєстру: до 2026-09-05 фракції писали
+    // "OZ_Core_Factions.json" -- лишок з часів, коли таблиця ще жила в ядрі
+    // (виділені звідти 2026-09-04). Тепер файл носить ім'я цього мода.
+    //
+    // МУСИТЬ СТОЯТИ ПЕРЕД Load. OZ_ConfigLoader на відсутньому шляху мовчки
+    // пише умовчання (LoadDefaults) і одразу зберігає їх на диск -- спитай
+    // він спершу новий шлях, стенд із самим лише старим файлом отримає ДЕСЯТЬ
+    // дефолтних фракцій замість дев'яти адмінових, і в ту ж мить перезапису
+    // старий файл перестане бути джерелом правди для будь-кого.
+    //
+    // Ознака разовості -- НАЯВНІСТЬ нового файла, а не окремий прапорець:
+    // другий старт бачить його одразу й виходить першим рядком.
+    private static void MigrateFileName()
+    {
+        string oldPath = OZ_Const.PROFILE_DIR + "\\OZ_Core_Factions.json";
+        string newPath = OZ_Const.PROFILE_DIR + "\\OZ_Factions.json";
+
+        if (FileExist(newPath))
+            return;
+        if (!FileExist(oldPath))
+            return;
+
+        string movedPath = oldPath + ".moved";
+
+        if (!CopyFile(oldPath, newPath))
+        {
+            string failed = "factions: cannot copy " + oldPath + " to " + newPath;
+            failed += " - the rename did not happen, the old file is untouched";
+            OZ_Log.Error(failed);
+            return;
+        }
+
+        // Копія під старим ім'ям лишається на диску (вимога міграції), а сам
+        // старий шлях прибираємо, щоб другий старт бачив рівно один файл
+        // реєстру. Обидва виклики -- під $profile:, як CopyFile/DeleteFile і
+        // вимагають.
+        CopyFile(oldPath, movedPath);
+        DeleteFile(oldPath);
+
+        string done = "factions: " + oldPath + " renamed to " + newPath;
+        done += " (old file kept as " + movedPath + ")";
+        OZ_Log.Info(done);
     }
 
     static int Count()
@@ -694,7 +740,7 @@ class OZ_Factions
     //
     // Осі роз'їхались, але джерела лишились чужі -- гільдія, файл акаунта,
     // постачальник, -- і будь-яке з них може прислати слаг, позначений у
-    // OZ_Core_Factions.json як BaseFaction. Пропустити його означало б, що всі
+    // OZ_Factions.json як BaseFaction. Пропустити його означало б, що всі
     // «сталкери» раптом стали одним угрупованням і бачать одне одного
     // своїми: рівно те, що ТЗ-1 R3.2 забороняє про базову вісь.
     //
@@ -762,7 +808,7 @@ class OZ_Factions
 
     // Перша фракція з BaseFaction: true в порядку файлу, або порожньо.
     // Порядок файлу -- це і є відповідь «яку саме»: перевпорядкувати
-    // OZ_Core_Factions.json адмін уміє, а вигадувати йому ще одне поле «головна
+    // OZ_Factions.json адмін уміє, а вигадувати йому ще одне поле «головна
     // базова» означало б два джерела правди про одне.
     static string FirstBaseId()
     {
