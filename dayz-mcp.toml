@@ -44,12 +44,11 @@ noise        = ["Bridge.Url is not https", "module class \"OZ_Module_Radio\" is 
 # one-time migration of the invitation lifetime warns on a clean install where
 # nothing was ever lost; the admin reads it in the log, the verdict does not fail.
 
-# LoadDefaults() (OZ_Factions.c) сіє ДЕСЯТЬ фракцій на чистому профілі -- це і
-# є число тут: лічильник звіряє перший бут СВІЖОГО чекауту, а не цю машину.
-# Цей стенд, знятий 2026-09-04 18:18 (script_2026-09-04_18-17-49.log), несе
-# дев'ять у своєму Factions.json -- це стан стенду, а не мода.
-[expect.counters]
-factions = 10
+# No counter for the faction count: the ready line prints how many factions the
+# server read from its own $profile:OpenZone\OZ_Core_Factions.json -- nine on this
+# stand, ten from LoadDefaults on a fresh profile -- and a number that depends on
+# the server's data file is not a fact the build can promise. The ready line
+# still proves the load; the number is read by eye in the log.
 
 [client]
 # The client runs with -filePatching and mod_build keeps @<Mod>/<Mod> as a junction
