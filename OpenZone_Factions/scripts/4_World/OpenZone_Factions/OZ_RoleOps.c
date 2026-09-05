@@ -524,9 +524,15 @@ class OZ_FactionInvites
 
         // Кажемо запрошеному одразу, якщо він у Зоні. Не в Зоні -- побачить,
         // коли зайде, якщо встигне до строку.
+        //
+        // `why` -- КЛЮЧ, а не назва угруповання: OZ_Notice.Text() показує
+        // слова лише тоді, коли причина починається з STR_, інакше успіх
+        // читається як загальне "#STR_OZ_ROLE_DONE" ("Готово. Discord це
+        // має."). Запрошений мусить побачити саме запрошення -- ключ
+        // лежить в OpenZone_Factions/stringtable.csv.
         PlayerIdentity to = OZ_Link.Online(targetUid);
         if (to)
-            OZF_Rpc.RoleRespond(to, "invited", true, mine);
+            OZF_Rpc.RoleRespond(to, "invited", true, "STR_OZ_ROLE_INVITED");
     }
 
     // Чинне запрошення, або null. Прострочене прибирає за собою.
