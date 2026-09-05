@@ -1,0 +1,14 @@
+{"note":"FACTIONS: form and player card filled. Listboxes stay empty -- AddItem is beyond a fixture. No name repeats, so no op carries nth. Iскра opens with a Latin I: no U+0406.","ops":[
+{"op":"show","name":"PaneFactions"},
+{"op":"text","name":"FacSearch","text":"dolg"},
+{"op":"text","name":"FacSlug","text":"dolg"},
+{"op":"text","name":"FacLabel","text":"Долг"},
+{"op":"text","name":"FacLimit","text":"24"},
+{"op":"text","name":"InfoName","text":"Iскра"},
+{"op":"text","name":"InfoDiscord","text":"discord: iskra"},
+{"op":"text","name":"InfoSteam","text":"steam: 76561198012345678"},
+{"op":"text","name":"InfoFaction","text":"faction: одинак / Долг ^сержант [leader]"},
+{"op":"text","name":"InfoRank","text":"stalker rank: ветеран"},
+{"op":"text","name":"InfoTraits","text":"traits: провідник, механік"},
+{"op":"text","name":"WipeNote","text":"Permadeath: PDAs freeze forever, private chats are left, roles reset to novice. Press twice."}
+]}

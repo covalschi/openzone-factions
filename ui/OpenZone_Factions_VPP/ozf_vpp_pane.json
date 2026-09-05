@@ -1,0 +1,127 @@
+{
+  "layout": "ozf_vpp_pane",
+  "note": "FACTIONS pane of the OpenZone admin window -- its own pbo and its own layout, because a server without the faction mod never loads this file and the core must not know the pane exists. OZF_VppPane.OnCreate builds it under M_SUB_WIDGET and calls RegisterPane(factions, FACTIONS, pane, FacHint), so the root stands at [0, vpp.paneY] and starts hidden, exactly like the core panes. Names OZF_VppPane.c resolves by string: FacSearch, FacCfgList, FacSlug, FacLabel, FacLimit (the last four through the inherited SetEdit/GetEdit), InfoName, InfoDiscord, InfoSteam, InfoFaction, InfoRank, InfoTraits, BtnFacLeaderText, BtnRankText, BtnFRankText, BtnTraitText, FacRoster, FacHint -- plus twenty button names dispatched in OnClick: BtnFacLeader, BtnFacNew, BtnFacSave, BtnFacDel, BtnRank, BtnRankSet, BtnRankClear, BtnFRank, BtnFRankSet, BtnFRankClear, BtnTrait, BtnTraitAdd, BtnTraitDel, BtnPSpawn, BtnPSpawnClear, BtnWipe, BtnAssign, BtnLead, BtnClearFac, BtnRoster. Tokens come from the core repository through [build] tokens: the admin window is a platform surface and its palette is not this mod's to own. Console captions stay English (CONTRIBUTING.md).",
+  "root": {"frame": {"name": "PaneFactions", "size": "$vpp.pane", "at": [0, "$vpp.paneY"], "inset": "$vpp.inset",
+    "hidden": true, "priority": 2,
+    "note": "Hidden: ShowPane shows the open tab's pane and hides the rest.",
+    "children": [
+      {"vbox": {"name": "FacBody", "gap": "$space.gap",
+        "note": "The whole vertical budget, against 524 - 2 * 20 = 484 units: 320 (the two columns) + 10 + 122 (the roster band) + 10 + 22 (FacHint) = 484, nothing left over. Each column is 470 wide, 20 apart, 470 + 20 + 470 = 960 = 1000 - 2 * 20. Inside a column, seven children over six gaps of 6 leave 320 - 172 - 36 = 112 units for the one child that fills -- the faction list on the left, the player card on the right. The roster band could not also carry a section head: 30 + 6 more would cut FacRoster from four visible rows to three, and four rows of players are worth more than a second caption over a list whose buttons already name it.",
+        "children": [
+          {"hbox": {"name": "FacCols", "h": 320, "gap": "$space.column", "children": [
+
+            {"vbox": {"name": "FacEditCol", "w": 470, "gap": "$space.tight", "children": [
+              {"section": {"name": "SecFacL", "text": "FACTIONS"}},
+              {"field": {"name": "FacSearch",
+                "note": "Filter over the list below; OnChange rebuilds FacCfgList on every keystroke."}},
+              {"listbox": {"name": "FacCfgList", "h": "fill", "font": "field", "color": "$text",
+                "props": {"style": "NoScrollBar", "title visible": false, "highlight row": true, "lines": 4},
+                "note": "The engine's own listbox, filled by AddItem. Four lines over 112 units keeps a 28-unit row against the 30 of the hand-written pane; the search field above it is what reaches a faction the four rows do not show, because NoScrollBar is the old prop and stays."}},
+              {"hrow": {"h": "$size.field", "children": [
+                {"label": {"name": "FacSlugLbl", "w": "$vpp.labelW", "text": "slug", "font": "small", "color": "$muted"}},
+                {"field": {"name": "FacSlug", "w": "$vpp.fieldW"}}
+              ]}},
+              {"hrow": {"h": "$size.field", "children": [
+                {"label": {"name": "FacLabelLbl", "w": "$vpp.labelW", "text": "name", "font": "small", "color": "$muted"}},
+                {"field": {"name": "FacLabel", "w": "$vpp.fieldW"}}
+              ]}},
+              {"hrow": {"h": "$size.field", "children": [
+                {"label": {"name": "FacLimitLbl", "w": "$vpp.labelW", "text": "limit, 0 = none", "font": "small", "color": "$muted"}},
+                {"field": {"name": "FacLimit", "w": "$vpp.fieldW"}}
+              ]}},
+              {"hbox": {"name": "FacFormActs", "h": "$size.button", "gap": "$space.tight",
+                "note": "All four in one row: 148 + 60 + 118 + 126 = 452 plus three gaps of 6 = 470. The widest caption is LEADER POST: yes, 16 characters -- the hand-written pane fitted it into 130 units at 12 point, so 148 units at the 13 of $font.small has room, and REMOVE FACTION at 14 characters has 126. Two rows of two would cost 36 units and the faction list has none to give.",
+                "children": [
+                  {"button": {"name": "BtnFacLeader", "w": 148, "text": "LEADER POST: yes"}},
+                  {"button": {"name": "BtnFacNew", "w": 60, "text": "NEW"}},
+                  {"button": {"name": "BtnFacSave", "w": 118, "text": "SAVE FACTION", "edge": "$ok", "color": "$ok"}},
+                  {"button": {"name": "BtnFacDel", "w": 126, "text": "REMOVE FACTION", "edge": "$bad", "color": "$bad"}}
+                ]}}
+            ]}},
+
+            {"vbox": {"name": "FacPlayerCol", "w": 470, "gap": "$space.tight", "children": [
+              {"section": {"name": "SecFacR", "text": "PLAYER"}},
+              {"vbox": {"name": "FacCard", "h": "fill",
+                "note": "Six caption-and-value rows, 18 units each = 108 inside the 112 this column has left. FillPlayerCard still writes its own word in front of five of the six values (discord:, steam:, faction:, stalker rank:, traits:) -- the captions here make those prefixes redundant, and trimming them is a one-line change in OZF_VppPane.c that this layout-only commit deliberately does not make. InfoName carries the empty-selection line; the script's own version of it still says on the right and is stale now that the roster sits below.",
+                "children": [
+                  {"hrow": {"h": 18, "children": [
+                    {"label": {"name": "InfoNameLbl", "w": 110, "text": "name", "font": "small", "color": "$muted"}},
+                    {"label": {"name": "InfoName", "w": 360, "text": "pick a player in the roster below", "font": "small", "color": "$text"}}
+                  ]}},
+                  {"hrow": {"h": 18, "children": [
+                    {"label": {"name": "InfoDiscordLbl", "w": 110, "text": "discord", "font": "small", "color": "$muted"}},
+                    {"label": {"name": "InfoDiscord", "w": 360, "font": "small", "color": "$text"}}
+                  ]}},
+                  {"hrow": {"h": 18, "children": [
+                    {"label": {"name": "InfoSteamLbl", "w": 110, "text": "steam", "font": "small", "color": "$muted"}},
+                    {"label": {"name": "InfoSteam", "w": 360, "font": "small", "color": "$text"}}
+                  ]}},
+                  {"hrow": {"h": 18, "children": [
+                    {"label": {"name": "InfoFactionLbl", "w": 110, "text": "faction", "font": "small", "color": "$muted"}},
+                    {"label": {"name": "InfoFaction", "w": 360, "font": "small", "color": "$text"}}
+                  ]}},
+                  {"hrow": {"h": 18, "children": [
+                    {"label": {"name": "InfoRankLbl", "w": 110, "text": "rank", "font": "small", "color": "$muted"}},
+                    {"label": {"name": "InfoRank", "w": 360, "font": "small", "color": "$text"}}
+                  ]}},
+                  {"hrow": {"h": 18, "children": [
+                    {"label": {"name": "InfoTraitsLbl", "w": 110, "text": "traits", "font": "small", "color": "$muted"}},
+                    {"label": {"name": "InfoTraits", "w": 360, "font": "small", "color": "$text"}}
+                  ]}}
+                ]}},
+              {"hbox": {"name": "FacRankRow", "h": 26, "gap": "$space.tight",
+                "note": "Cycler plus its two actions on ONE row: 214 + 122 + 122 = 458 plus two gaps of 6 = 470. The hand-written pane needed two rows for each of the three ladders because its middle column was only 270 wide; at 470 the pair fits beside the cycler and the three ladders cost three rows instead of six.",
+                "children": [
+                  {"button": {"name": "BtnRank", "w": 214, "text": "rank: -"}},
+                  {"button": {"name": "BtnRankSet", "w": 122, "text": "SET RANK", "edge": "$ok", "color": "$ok"}},
+                  {"button": {"name": "BtnRankClear", "w": 122, "text": "CLEAR RANK", "edge": "$bad", "color": "$bad"}}
+                ]}},
+              {"hbox": {"name": "FacFRankRow", "h": 26, "gap": "$space.tight", "children": [
+                {"button": {"name": "BtnFRank", "w": 214, "text": "faction rank: -"}},
+                {"button": {"name": "BtnFRankSet", "w": 122, "text": "SET F-RANK", "edge": "$ok", "color": "$ok"}},
+                {"button": {"name": "BtnFRankClear", "w": 122, "text": "CLEAR F-RANK", "edge": "$bad", "color": "$bad"}}
+              ]}},
+              {"hbox": {"name": "FacTraitRow", "h": 26, "gap": "$space.tight", "children": [
+                {"button": {"name": "BtnTrait", "w": 214, "text": "trait: -"}},
+                {"button": {"name": "BtnTraitAdd", "w": 122, "text": "GIVE TRAIT", "edge": "$ok", "color": "$ok"}},
+                {"button": {"name": "BtnTraitDel", "w": 122, "text": "TAKE TRAIT", "edge": "$bad", "color": "$bad"}}
+              ]}},
+              {"hrow": {"name": "FacSpawnRow", "h": "$size.button", "children": [
+                {"label": {"name": "PSpRadLbl", "w": 96, "text": "radius, m", "font": "small", "color": "$muted"}},
+                {"field": {"name": "PSpRadius", "w": 130,
+                  "note": "GUARDED SPOT ONE. This box used to be a bare EditBoxWidgetClass with nothing behind it -- invisible until clicked, and mod_lint's editbox-bare rule caught it. The field primitive cannot make that mistake: it always emits PSpRadiusFrame (edge) holding PSpRadiusFill (panel) and the edit box, so the frame is a property of the primitive, not of somebody remembering to add two panels."}},
+                {"gap": {"w": "$space.tight"}},
+                {"button": {"name": "BtnPSpawn", "w": 116, "text": "SPAWN HERE", "edge": "$ok", "color": "$ok"}},
+                {"gap": {"w": "$space.tight"}},
+                {"button": {"name": "BtnPSpawnClear", "w": 116, "text": "CLEAR SPAWN", "edge": "$bad", "color": "$bad"}}
+              ]}},
+              {"hbox": {"name": "FacWipeRow", "h": "$size.header", "gap": "$space.tight", "children": [
+                {"button": {"name": "BtnWipe", "w": 170, "text": "WIPE PLAYER", "edge": "$bad", "color": "$bad"}},
+                {"text": {"name": "WipeNote", "w": 294, "plain": true, "grow": false, "font": "tiny", "color": "$muted",
+                  "text": "Permadeath: PDAs freeze forever, private chats are left, roles reset to novice. Press twice.",
+                  "note": "GUARDED SPOT TWO. As a plain TextWidget this line had no wrapping at all: the gallery of 2026-09-04 measured it 683 x 21 px inside a box of 415 x 83 px and it crossed FacHint by 415 x 33 px. The arithmetic in layout units, at the 1600-high screen where 280 units rendered as 415 px (1.482 px per unit): the string is 683 / 1.482 = 461 units on one line and a line of $font.tiny is 21 / 1.482 = 14.2 units tall. In this 294-unit box 461 / 294 = 1.57, so it wraps to two lines = 28.4 units, and the row is $size.header = 34 -- five units of slack. plain makes it a MultilineTextWidgetClass with wrap 1, and grow false pins size to text v at 0, so a longer translation clips inside the row instead of growing down into the roster band."}}
+              ]}}
+            ]}}
+          ]}},
+
+          {"hbox": {"name": "FacRosterRow", "h": 122, "gap": "$space.column",
+            "note": "The roster gets the whole width the pane has: 690 for the list and 250 for the four actions, 690 + 20 + 250 = 960. The old pane gave it a 280-unit column, so a row now holds the name, the offline mark and the faction without truncating.",
+            "children": [
+              {"listbox": {"name": "FacRoster", "w": "fill", "font": "field", "color": "$text",
+                "props": {"title visible": false, "highlight row": true, "lines": 4},
+                "note": "No NoScrollBar, exactly as the hand-written pane had it: the roster is as long as the server is busy and its bar is what reaches row twenty. Four lines over 122 units = 30.5 per row, the same row the old 300 / 10 gave."}},
+              {"vbox": {"name": "FacRosterActs", "w": 250, "gap": "$space.tight",
+                "note": "Four buttons of equal share: (122 - 3 * 6) / 4 = 26 units each. Stacked beside the list rather than in a row under it -- ASSIGN TO SELECTED FACTION is 26 characters and wants the full 250.",
+                "children": [
+                  {"button": {"name": "BtnAssign", "h": "fill", "text": "ASSIGN TO SELECTED FACTION", "edge": "$ok", "color": "$ok"}},
+                  {"button": {"name": "BtnLead", "h": "fill", "text": "MAKE LEADER"}},
+                  {"button": {"name": "BtnClearFac", "h": "fill", "text": "CLEAR FACTION", "edge": "$bad", "color": "$bad"}},
+                  {"button": {"name": "BtnRoster", "h": "fill", "text": "REFRESH"}}
+                ]}}
+            ]}},
+
+          {"label": {"name": "FacHint", "h": "$size.hint", "font": "hint", "color": "$muted",
+            "note": "Empty: RegisterPane named it the pane's hint, and every answer of the faction routes lands here."}}
+        ]}}
+    ]}}
+}

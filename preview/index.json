@@ -4,6 +4,7 @@
     {"name": "page-faction", "layout": "OpenZone_Factions_PDA/gui/layouts/oz_pda_page_faction.layout", "host": "1282 518", "fixture": "preview/faction.json",
      "note": "The host is the WHOLE page area, not the page's own 642x518: the root stands at position 640 0, because this is the right half of the contacts tab, and a host only as wide as the half would leave all but its first 2 units outside the picture. The empty left half of the shot is where the base mod draws contacts."},
     {"name": "row-faction", "layout": "OpenZone_Factions_PDA/gui/layouts/oz_pda_faction_row.layout", "host": "592 32", "fixture": "preview/faction-row.json"},
-    {"name": "factions-vpp", "layout": "OpenZone_Factions_VPP/gui/layouts/ozf_vpp_pane.layout", "host": "1000 620"}
+    {"name": "factions-vpp", "layout": "OpenZone_Factions_VPP/gui/layouts/ozf_vpp_pane.layout", "host": "1000 620", "fixture": "preview/factions-vpp.json",
+     "note": "The pane is 1000x524 but stands at [0, vpp.paneY] inside the window, so the host is the 1000x620 window it lands in, not the pane's own rectangle. The pane's root is hidden -- ShowPane is what reveals the open tab -- so the fixture shows PaneFactions before it fills anything."}
   ]
 }
