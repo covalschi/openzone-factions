@@ -1162,6 +1162,32 @@ FrameWidgetClass PaneFactions {
    "text valign" center
    priority 3
   }
+  PanelWidgetClass PSpRadiusEdge {
+   visible 1
+   ignorepointer 1
+   color 0.31 0.31 0.35 1
+   position 519 359
+   size 152 26
+   hexactpos 1
+   vexactpos 1
+   hexactsize 1
+   vexactsize 1
+   priority 1
+   style rover_sim_colorable
+  }
+  PanelWidgetClass PSpRadiusBg {
+   visible 1
+   ignorepointer 1
+   color 0.08 0.08 0.09 1
+   position 520 360
+   size 150 24
+   hexactpos 1
+   vexactpos 1
+   hexactsize 1
+   vexactsize 1
+   priority 2
+   style rover_sim_colorable
+  }
   EditBoxWidgetClass PSpRadius {
    visible 1
    position 520 360
