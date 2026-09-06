@@ -40,16 +40,16 @@ class CfgMods
         version = "0.1.0";
         type = "mod";
 
-        dependencies[] = {"Game", "World", "Mission"};
+        dependencies[] = {"Game", "World"};
 
         class defs
         {
             class gameScriptModule    { value = ""; files[] = {"OpenZone_Factions/scripts/3_Game"}; };
             class worldScriptModule   { value = ""; files[] = {"OpenZone_Factions/scripts/4_World"}; };
-            // 5_Mission з'явився 2026-09-04 разом із власним каналом ролей:
-            // його клієнтський приймач мусить бачити OZ_Notice, а той
-            // живе в 5_Mission ядра.
-            class missionScriptModule { value = ""; files[] = {"OpenZone_Factions/scripts/5_Mission"}; };
+            // 5_Mission ПІШОВ 2026-09-06 разом із власним зворотним каналом:
+            // відповіді ролей їдуть ядровим "OZ_Notice", а його приймач
+            // реєструє саме ядро. У цього мода клієнтського коду не лишилось
+            // жодного рядка -- нема чого й компілювати.
         };
     };
 };

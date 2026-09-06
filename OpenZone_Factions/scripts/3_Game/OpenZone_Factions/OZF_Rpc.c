@@ -16,17 +16,22 @@
 // і жодне з трьох полів не наближається до межі. Єдине, що може вирости, --
 // це `why` у відповіді, коли причину дає міст своїми словами: воно не ріжеться
 // на частини, а ПІДРІЗАЄТЬСЯ на тому ж порозі; чому саме так -- нижче.
+//
+// ЗВОРОТНОГО КАНАЛУ В НАС БІЛЬШЕ НЕМАЄ (2026-09-06). Був "OZF_RoleRes" --
+// Param3<string,bool,string> до клієнта, приймач-одинак і modded
+// MissionGameplay, щоб його зареєструвати, -- і все це віддавало почуте в
+// OZ_Notice.Take, тобто в ядровий збірник відповідей. Ядровий канал
+// "OZ_Notice" возить рівно той самий конверт до того самого збірника й
+// реєструється завжди (OZ_MissionGameplay), тож другий був точною копією
+// першого разом із двома файлами навколо. Підрізання лишається тут, бо
+// довгий `why` буває тільки в нас: у ядра причини -- ключі таблиці рядків.
 
 class OZF_Rpc
 {
-    // ІМЕНА -- ВЛАСНІ, з префіксом мода. У ядрі ці ж функції звались
-    // "OZ_RoleReq"/"OZ_RoleRes"; ядрова половина лишилась живою -- вона возить
-    // звістки КПК (обмін контактами) і зветься відтоді "OZ_Notice", бо возить
-    // не ролі, -- тож однакові імена під однаковим іменем мода означали б два
-    // обробники на один ключ.
-    static const string RPC_ROLE_REQ = "OZF_RoleReq";
-    static const string RPC_ROLE_RES = "OZF_RoleRes";
-
+    // ІМ'Я -- ВЛАСНЕ, з префіксом мода. CF ключує RPC парою (ім'я мода, ім'я
+    // функції), тож ("OpenZone_Factions", "OZF_RoleReq") не зіткнеться ні з
+    // ядровою, ні з чужою: збігтись мусили б ОБИДВА рядки.
+    //
     // Зареєстрована функція МУСИТЬ мати рівно цю форму -- її задає диспетчер
     // CF (Param4 + CallFunctionParams), ніде не оголошуючи явно:
     //
@@ -34,15 +39,7 @@ class OZF_Rpc
     //
     // Чотири параметри в цьому порядку, void, ім'я збігається з рядком
     // посимвольно, метод НЕ статичний.
-    static void RegisterServer(Class inst)
-    {
-        GetRPCManager().AddRPC(OZF_Const.MOD, RPC_ROLE_REQ, inst, SingleplayerExecutionType.Server);
-    }
-
-    static void RegisterClient(Class inst)
-    {
-        GetRPCManager().AddRPC(OZF_Const.MOD, RPC_ROLE_RES, inst, SingleplayerExecutionType.Client);
-    }
+    static const string RPC_ROLE_REQ = "OZF_RoleReq";
 
     // Кого міняємо -- ІМ'ЯМ, а не uid.
     //
@@ -84,7 +81,6 @@ class OZF_Rpc
         if (say.Length() > OZ_Const.RPC_STR_CHUNK)
             say = say.Substring(0, OZ_Rpc.CutSafe(say, 0, OZ_Const.RPC_STR_CHUNK));
 
-        Param3<string, bool, string> p = new Param3<string, bool, string>(op, ok, say);
-        GetRPCManager().SendRPC(OZF_Const.MOD, RPC_ROLE_RES, p, true, to);
+        OZ_Rpc.Notice(to, op, ok, say);
     }
 }
