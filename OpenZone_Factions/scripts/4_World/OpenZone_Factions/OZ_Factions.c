@@ -690,7 +690,15 @@ class OZ_Factions
         {
             if (parts[i] == "")
                 continue;
-            c.Insert(Math.Clamp(parts[i].ToInt(), 0, 255));
+
+            // Руками, а не Math.Clamp: той віддає float, і звуження назад у
+            // int -- зайве питання там, де два порівняння відповідають самі.
+            int v = parts[i].ToInt();
+            if (v < 0)
+                v = 0;
+            if (v > 255)
+                v = 255;
+            c.Insert(v);
         }
 
         if (c.Count() < 3)
