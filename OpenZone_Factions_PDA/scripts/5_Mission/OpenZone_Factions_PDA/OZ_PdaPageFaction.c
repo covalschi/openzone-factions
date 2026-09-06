@@ -118,7 +118,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
             return;
 
         string err;
-        OZ_FactionState st;
+        OZ_FactionState st = new OZ_FactionState();
         if (!JsonFileLoader<OZ_FactionState>.LoadData(json, st, err) || !st)
             return;
 

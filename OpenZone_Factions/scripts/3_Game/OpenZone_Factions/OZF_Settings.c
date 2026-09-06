@@ -20,6 +20,16 @@ class OZF_FactionLimits
     // Скільки живе запрошення у фракцію. Довше -- і гравець приймає
     // запрошення від лідера, який давно передумав.
     int InviteTtlSeconds = 120;
+
+    // Копія в об'єкт, який зробив скрипт (шапка OZ_ConfigBase ядра, зміряно
+    // 2026-09-06). s_Inst живе весь запуск сервера, і це число читає кожне
+    // запрошення -- через години після розбору файла.
+    OZF_FactionLimits Copy()
+    {
+        OZF_FactionLimits c = new OZF_FactionLimits();
+        c.InviteTtlSeconds = InviteTtlSeconds;
+        return c;
+    }
 }
 
 // ЧУЖИЙ ФАЙЛ НАШИМИ ОЧИМА: конфіг ядра, з якого нас цікавить один розділ.
@@ -88,8 +98,22 @@ class OZF_Settings : OZ_ConfigBase
     {
         warnings = 0;
 
+        // ВКЛАДЕНЕ -- У СТВОРЕНЕ СКРИПТОМ, до першого ж рядка попередження.
+        // Розділу може не бути у файлі зовсім: тоді серіалізатор віддає його
+        // створеним і обнуленим, а не null (шапка OZ_ConfigBase ядра), і
+        // саме тут це й зміряли -- зонд A/B цього файла.
         if (!Faction)
             Faction = new OZF_FactionLimits();
+        else
+            Faction = Faction.Copy();
+
+        // СПРАВЖНЄ УМОВЧАННЯ ПІСЛЯ КОПІЇ. Ключа, якого у файлі немає, копія
+        // переносить нулем, а не сто двадцяткою з ініціалізатора; нуль
+        // секунд запрошення не означає нічого, тож віддаємо задокументоване
+        // число мовчки, а не через нижній кламп, який назвав би його
+        // десяткою.
+        if (Faction.InviteTtlSeconds == 0)
+            Faction.InviteTtlSeconds = 120;
 
         if (Faction.InviteTtlSeconds < INVITE_TTL_MIN)
         {
@@ -247,12 +271,17 @@ class OZF_Settings : OZ_ConfigBase
         if (!old.Faction)
             return 0;
 
+        // Знімаємо число ДО першої склейки рядка: розділ виділив
+        // серіалізатор, і після виділення пам'яті читати з нього вже не
+        // можна (шапка OZ_ConfigBase ядра).
+        int ttl = old.Faction.InviteTtlSeconds;
+
         string got = "factions settings: ";
         got += path;
         got += " gives Faction.InviteTtlSeconds=";
-        got += old.Faction.InviteTtlSeconds.ToString();
+        got += ttl.ToString();
         OZ_Log.Dbg(got);
 
-        return old.Faction.InviteTtlSeconds;
+        return ttl;
     }
 }

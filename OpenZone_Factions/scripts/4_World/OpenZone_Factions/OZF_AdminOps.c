@@ -91,6 +91,53 @@ class OZ_AdminRoster
         FacLimits  = new array<int>();
         FacLeaders = new array<bool>();
     }
+
+    // Копія для того, хто МАЛЮЄ (панель VPP): вісім списків читаються там
+    // упереміш із перебудовою списків і цикликів, тобто далеко за межами
+    // чесного читання (шапка OZ_ConfigBase ядра).
+    OZ_AdminRoster Copy()
+    {
+        OZ_AdminRoster c = new OZ_AdminRoster();
+        c.Partial = Partial;
+
+        int i;
+        if (Rows)
+        {
+            for (i = 0; i < Rows.Count(); i++)
+            {
+                if (Rows[i])
+                    c.Rows.Insert(Rows[i].Copy());
+            }
+        }
+
+        CopyStrings(Factions,  c.Factions);
+        CopyStrings(Traits,    c.Traits);
+        CopyStrings(Ranks,     c.Ranks);
+        CopyStrings(FRanks,    c.FRanks);
+        CopyStrings(FacLabels, c.FacLabels);
+
+        if (FacLimits)
+        {
+            for (i = 0; i < FacLimits.Count(); i++)
+                c.FacLimits.Insert(FacLimits[i]);
+        }
+
+        if (FacLeaders)
+        {
+            for (i = 0; i < FacLeaders.Count(); i++)
+                c.FacLeaders.Insert(FacLeaders[i]);
+        }
+
+        return c;
+    }
+
+    private void CopyStrings(array<string> from, array<string> into)
+    {
+        if (!from)
+            return;
+        for (int i = 0; i < from.Count(); i++)
+            into.Insert(from[i]);
+    }
 }
 
 // The faction editor's letter (TZ-2 section 15, R7.8): the VPP pane fills
@@ -131,7 +178,7 @@ class OZF_AckReply : OZ_BridgeReply
         if (!to)
             return;
 
-        OZ_BridgeAck ack;
+        OZ_BridgeAck ack = new OZ_BridgeAck();
         string err;
         if (!JsonFileLoader<OZ_BridgeAck>.LoadData(json, ack, err) || !ack)
         {
@@ -243,7 +290,7 @@ class OZ_AdminWipeReply : OZ_BridgeReply
 
         PlayerIdentity to = OZ_Link.Online(m_AdminUid);
 
-        OZ_BridgeAck ack;
+        OZ_BridgeAck ack = new OZ_BridgeAck();
         string err;
         if (!JsonFileLoader<OZ_BridgeAck>.LoadData(json, ack, err) || !ack)
         {
@@ -369,7 +416,7 @@ class OZ_WipeSink : OZ_BridgeSink
 {
     override void Deliver(string json)
     {
-        OZ_AdminWipeAsk a;
+        OZ_AdminWipeAsk a = new OZ_AdminWipeAsk();
         string err;
         if (!JsonFileLoader<OZ_AdminWipeAsk>.LoadData(json, a, err) || !a)
         {
@@ -414,7 +461,7 @@ class OZF_RosterReply : OZ_BridgeReply
         if (!to)
             return;
 
-        OZ_RosterViews v;
+        OZ_RosterViews v = new OZ_RosterViews();
         string err;
         if (!JsonFileLoader<OZ_RosterViews>.LoadData(json, v, err) || !v)
         {
@@ -430,9 +477,22 @@ class OZF_RosterReply : OZ_BridgeReply
             return;
         }
 
-        // Копії тут не треба: рядки конверта читає RowOf у цьому ж виклику й
-        // складає своє. Тримати їх довше нікому -- див. OZ_RoleView.Copy.
-        Send(to, v.Rows, "");
+        // КОПІЯ ПОТРІБНА, і старий коментар тут стверджував протилежне.
+        // BuildRoster заводить ростер, ходить по фракціях, будує мапу
+        // особистостей і масив рядків -- і лише ПІСЛЯ всього цього читає
+        // views[i] через RowOf. Рахується не виклик, а наступне виділення
+        // (шапка OZ_ConfigBase ядра).
+        array<ref OZ_RoleView> kept = new array<ref OZ_RoleView>();
+        if (v.Rows)
+        {
+            for (int i = 0; i < v.Rows.Count(); i++)
+            {
+                if (v.Rows[i])
+                    kept.Insert(v.Rows[i].Copy());
+            }
+        }
+
+        Send(to, kept, "");
     }
 
     override void OnFail(int code)
@@ -485,7 +545,7 @@ class OZF_AdminSection : OZ_AdminSection
     // never holds a faction the bot does not.
     private string FactionUpsert(string json, string op, PlayerIdentity sender, out bool ok, out string error)
     {
-        OZF_FactionEdit e;
+        OZF_FactionEdit e = new OZF_FactionEdit();
         string jerr;
         if (!JsonFileLoader<OZF_FactionEdit>.LoadData(json, e, jerr) || !e || e.Slug == "")
         {

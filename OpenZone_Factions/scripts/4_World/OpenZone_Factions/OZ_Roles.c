@@ -592,7 +592,7 @@ class OZ_RolesSink : OZ_BridgeSink
 {
     override void Deliver(string json)
     {
-        OZ_RoleView v;
+        OZ_RoleView v = new OZ_RoleView();
         string err;
         if (!JsonFileLoader<OZ_RoleView>.LoadData(json, v, err) || !v)
         {
@@ -614,7 +614,7 @@ class OZ_RosterSink : OZ_BridgeSink
 {
     override void Deliver(string json)
     {
-        OZ_FactionRoster r;
+        OZ_FactionRoster r = new OZ_FactionRoster();
         string err;
         if (!JsonFileLoader<OZ_FactionRoster>.LoadData(json, r, err) || !r)
         {
@@ -622,25 +622,27 @@ class OZ_RosterSink : OZ_BridgeSink
             return;
         }
 
-        // КОПІЇ ТУТ НЕ ТРЕБА, і це не виняток із правила, а те саме правило:
-        // конверт ростера ніхто не тримає. Усі п'ять читачів нижче
-        // перекладають значення у ВЛАСНІ таблиці в цьому ж виклику -- поки
-        // об'єкт загрузчика ще читається правильно, -- і жодне посилання на
-        // нього не переживає повернення з Deliver.
-        OZ_Factions.ApplyRoster(r);
+        // КОПІЯ ПОТРІБНА, і старий коментар тут стверджував протилежне.
+        // «У цьому ж виклику» -- не те правило: рахується не виклик, а
+        // НАСТУПНЕ ВИДІЛЕННЯ. ApplyRoster нижче заводить OZ_Faction на
+        // кожен запис і складає рядки логу, а чотири осі читаються вже
+        // після нього -- з пам'яті, яку віддали комусь іншому.
+        OZ_FactionRoster kept = r.Copy();
+
+        OZ_Factions.ApplyRoster(kept);
 
         // Підписи інших осей -- у словник. Фракції веде OZ_Factions, бо в них
         // є ще й ставлення; решта -- самі лише слова.
-        OZ_RoleNames.Absorb(r.Ranks);
-        OZ_RoleNames.Absorb(r.Traits);
-        OZ_RoleNames.Absorb(r.Posts);
-        OZ_RoleNames.Absorb(r.FRanks);
+        OZ_RoleNames.Absorb(kept.Ranks);
+        OZ_RoleNames.Absorb(kept.Traits);
+        OZ_RoleNames.Absorb(kept.Posts);
+        OZ_RoleNames.Absorb(kept.FRanks);
 
         // А СЛАГИ мiток i звань -- ще й списками: адмiнському UI треба з
         // чого вибирати, а словник вибору не вiддає.
-        OZ_Roles.RememberTraitIds(r.Traits);
-        OZ_Roles.RememberRankIds(r.Ranks);
-        OZ_Roles.RememberFRankIds(r.FRanks);
+        OZ_Roles.RememberTraitIds(kept.Traits);
+        OZ_Roles.RememberRankIds(kept.Ranks);
+        OZ_Roles.RememberFRankIds(kept.FRanks);
     }
 }
 

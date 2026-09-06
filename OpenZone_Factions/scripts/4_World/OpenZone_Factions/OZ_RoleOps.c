@@ -54,7 +54,7 @@ class OZ_RoleReply : OZ_BridgeReply
     {
         PlayerIdentity to = OZ_Link.Online(m_Who);
 
-        OZ_RoleAnswer a;
+        OZ_RoleAnswer a = new OZ_RoleAnswer();
         string err;
         if (!JsonFileLoader<OZ_RoleAnswer>.LoadData(json, a, err) || !a)
         {

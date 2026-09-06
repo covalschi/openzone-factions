@@ -32,6 +32,14 @@ class OZ_FactionRelation
 {
     string With;
     string Stand;
+
+    OZ_FactionRelation Copy()
+    {
+        OZ_FactionRelation c = new OZ_FactionRelation();
+        c.With  = With;
+        c.Stand = Stand;
+        return c;
+    }
 }
 
 // Один запис таблиці.
@@ -82,6 +90,40 @@ class OZ_Faction
     int MaxMembers;
 
     ref array<ref OZ_FactionRelation> Relations;
+
+    // КОПІЯ В ОБ'ЄКТ, ЯКИЙ ЗРОБИВ СКРИПТ (шапка OZ_ConfigBase ядра, зміряно
+    // 2026-09-06). s_Cfg живе весь запуск сервера, і ці поля читає кожен
+    // рядок контакту, кожен спавн і кожна відповідь мосту -- через години
+    // після розбору файла.
+    //
+    // Ініціалізаторів у цього класу немає навмисно (див. вище), тож копія
+    // нічого не втрачає: нуль тут і був умовчанням, а справжні умовчання
+    // Validate() роздавав і раніше.
+    OZ_Faction Copy()
+    {
+        OZ_Faction c = new OZ_Faction();
+        c.Id          = Id;
+        c.DisplayName = DisplayName;
+        c.Short       = Short;
+        c.Color       = Color;
+        c.Hidden      = Hidden;
+        c.BaseFaction = BaseFaction;
+        c.MaxMembers  = MaxMembers;
+
+        c.Relations = new array<ref OZ_FactionRelation>();
+        if (Relations)
+        {
+            for (int i = 0; i < Relations.Count(); i++)
+            {
+                if (Relations[i])
+                    c.Relations.Insert(Relations[i].Copy());
+                else
+                    c.Relations.Insert(new OZ_FactionRelation());
+            }
+        }
+
+        return c;
+    }
 }
 
 class OZ_FactionsConfig : OZ_ConfigBase
@@ -268,6 +310,21 @@ class OZ_FactionsConfig : OZ_ConfigBase
         if (!Factions)
             Factions = new array<ref OZ_Faction>();
 
+        // ВКЛАДЕНЕ -- У СТВОРЕНЕ СКРИПТОМ, І ДО ПЕРШОГО ЖЕ ВИДІЛЕННЯ.
+        //
+        // Лоадер кличе Validate одразу після розбору, поки читання ще чесне;
+        // цикл нижче складає попередження й заводить масиви, тобто вже з
+        // другого запису читав би з чужої сторінки. Порожній запис замість
+        // null: цикл розіменовує елемент без перевірки, а фракція без Id
+        // отримає своє зауваження й полагодить файл.
+        for (int rs = 0; rs < Factions.Count(); rs++)
+        {
+            if (Factions[rs])
+                Factions.Set(rs, Factions[rs].Copy());
+            else
+                Factions.Set(rs, new OZ_Faction());
+        }
+
         for (int i = 0; i < Factions.Count(); i++)
         {
             OZ_Faction f = Factions[i];
@@ -283,6 +340,14 @@ class OZ_FactionsConfig : OZ_ConfigBase
 
             if (f.Color == "")
                 f.Color = "200 200 200";
+
+            // Short, Hidden, BaseFaction і MaxMembers умовчання НЕ отримують,
+            // і це не пропуск: у цього класу немає ініціалізаторів навмисно
+            // (див. його шапку), тобто нуль -- і є задокументоване умовчання
+            // кожного з чотирьох. Порожній Short означає «малюй повну назву»
+            // (ShortOf), Hidden і BaseFaction -- «ні», MaxMembers -- «без
+            // межі». Копія вище переносить чесно прочитаний нуль, отже
+            // виставляти тут нема чого.
 
             if (!f.Relations)
                 f.Relations = new array<ref OZ_FactionRelation>();
@@ -321,6 +386,17 @@ class OZ_FactionRosterEntry
     // Базова фракцiя: її носять усi й вона не є органiзацiєю. Див. довге
     // пояснення в полi OZ_Faction.BaseFaction.
     bool Base;
+
+    OZ_FactionRosterEntry Copy()
+    {
+        OZ_FactionRosterEntry c = new OZ_FactionRosterEntry();
+        c.Id          = Id;
+        c.DisplayName = DisplayName;
+        c.Color       = Color;
+        c.Limit       = Limit;
+        c.Base        = Base;
+        return c;
+    }
 }
 
 // Підпис однієї ролі, будь-якої з трьох осей. Той самий вигляд, що й у
@@ -337,6 +413,15 @@ class OZ_RoleName
     // Їде сюди, бо без порядку «підвищити» неможливе: гра знає слаги, але
     // хто з них вищий -- знає тільки реєстр бота.
     int Order;
+
+    OZ_RoleName Copy()
+    {
+        OZ_RoleName c = new OZ_RoleName();
+        c.Id          = Id;
+        c.DisplayName = DisplayName;
+        c.Order       = Order;
+        return c;
+    }
 }
 
 class OZ_FactionRoster
@@ -355,6 +440,60 @@ class OZ_FactionRoster
     // Factions REMOVED at the bot (TZ-2 section 15, R7.9). The merge adds and
     // renames and cannot infer an absence, so removals travel by name.
     ref array<string> Gone;
+
+    void OZ_FactionRoster()
+    {
+        Factions = new array<ref OZ_FactionRosterEntry>();
+        Ranks    = new array<ref OZ_RoleName>();
+        Traits   = new array<ref OZ_RoleName>();
+        Posts    = new array<ref OZ_RoleName>();
+        FRanks   = new array<ref OZ_RoleName>();
+        Gone     = new array<string>();
+    }
+
+    // КОПІЯ, і вона потрібна: ApplyRoster нижче заводить OZ_Faction на
+    // кожен запис, складає рядки логу й будує мапу -- тобто вже другий
+    // запис читався б із чужої сторінки, а Ranks/Traits/Posts/FRanks
+    // читаються ще й після всього цього (шапка OZ_ConfigBase ядра).
+    OZ_FactionRoster Copy()
+    {
+        OZ_FactionRoster c = new OZ_FactionRoster();
+        c.Stamp = Stamp;
+
+        int i;
+        if (Factions)
+        {
+            for (i = 0; i < Factions.Count(); i++)
+            {
+                if (Factions[i])
+                    c.Factions.Insert(Factions[i].Copy());
+            }
+        }
+
+        CopyNames(Ranks,  c.Ranks);
+        CopyNames(Traits, c.Traits);
+        CopyNames(Posts,  c.Posts);
+        CopyNames(FRanks, c.FRanks);
+
+        if (Gone)
+        {
+            for (i = 0; i < Gone.Count(); i++)
+                c.Gone.Insert(Gone[i]);
+        }
+
+        return c;
+    }
+
+    private void CopyNames(array<ref OZ_RoleName> from, array<ref OZ_RoleName> into)
+    {
+        if (!from)
+            return;
+        for (int i = 0; i < from.Count(); i++)
+        {
+            if (from[i])
+                into.Insert(from[i].Copy());
+        }
+    }
 }
 
 // Слова, якими описується ставлення. Рядками, бо їх читає адмін у JSON, і

@@ -21,6 +21,15 @@ class OZF_LoadoutRung
     string Faction = "";
     string Rank    = "";
     string Preset  = "";
+
+    OZF_LoadoutRung Copy()
+    {
+        OZF_LoadoutRung c = new OZF_LoadoutRung();
+        c.Faction = Faction;
+        c.Rank    = Rank;
+        c.Preset  = Preset;
+        return c;
+    }
 }
 
 // Модифікатор -- за посадою чи міткою (R4.2). Replace -- за слотом, останній
@@ -43,6 +52,34 @@ class OZF_LoadoutMod
         Replace = new array<ref OZ_LoadoutItem>();
         Add     = new array<ref OZ_LoadoutItem>();
     }
+
+    // OZ_LoadoutItem.Copy() оголошує ЯДРО -- воно ж оголошує й сам тип.
+    OZF_LoadoutMod Copy()
+    {
+        OZF_LoadoutMod c = new OZF_LoadoutMod();
+        c.Key = Key;
+
+        int i;
+        if (Replace)
+        {
+            for (i = 0; i < Replace.Count(); i++)
+            {
+                if (Replace[i])
+                    c.Replace.Insert(Replace[i].Copy());
+            }
+        }
+
+        if (Add)
+        {
+            for (i = 0; i < Add.Count(); i++)
+            {
+                if (Add[i])
+                    c.Add.Insert(Add[i].Copy());
+            }
+        }
+
+        return c;
+    }
 }
 
 class OZF_LoadoutFactionMods
@@ -53,6 +90,23 @@ class OZF_LoadoutFactionMods
     void OZF_LoadoutFactionMods()
     {
         Mods = new array<ref OZF_LoadoutMod>();
+    }
+
+    OZF_LoadoutFactionMods Copy()
+    {
+        OZF_LoadoutFactionMods c = new OZF_LoadoutFactionMods();
+        c.Faction = Faction;
+
+        if (Mods)
+        {
+            for (int i = 0; i < Mods.Count(); i++)
+            {
+                if (Mods[i])
+                    c.Mods.Insert(Mods[i].Copy());
+            }
+        }
+
+        return c;
     }
 }
 
@@ -119,6 +173,34 @@ class OZF_LoadoutsConfig : OZ_ConfigBase
             Ladder = new array<ref OZF_LoadoutRung>();
         if (!Modifiers)
             Modifiers = new array<ref OZF_LoadoutFactionMods>();
+
+        // ВКЛАДЕНЕ -- У СТВОРЕНЕ СКРИПТОМ, І ДО ПЕРШОГО Ж ВИДІЛЕННЯ.
+        //
+        // Лоадер кличе Validate одразу після розбору, поки читання ще чесне;
+        // усе нижче складає рядки попереджень, а CheckItems ще й питає
+        // конфіг гри по кожному предмету. s_Cfg потім живе весь запуск
+        // сервера, і одягає з нього ядро на КОЖНІЙ появі гравця.
+        //
+        // ЦІНА, ЯКУ ЦЕ МАЄ, записана в OZ_LoadoutItem.Copy() ядра: ключа,
+        // якого у файлі немає, копія переносить нулем, а Health01 і QuickBar
+        // умовчують -1. Файл, який пише сам мод, несе всі шість ключів
+        // кожного предмета -- це стосується лише обрізаного вручну.
+        int rs;
+        for (rs = 0; rs < Presets.Count(); rs++)
+        {
+            if (Presets[rs])
+                Presets.Set(rs, Presets[rs].Copy());
+        }
+        for (rs = 0; rs < Ladder.Count(); rs++)
+        {
+            if (Ladder[rs])
+                Ladder.Set(rs, Ladder[rs].Copy());
+        }
+        for (rs = 0; rs < Modifiers.Count(); rs++)
+        {
+            if (Modifiers[rs])
+                Modifiers.Set(rs, Modifiers[rs].Copy());
+        }
 
         for (int p = 0; p < Presets.Count(); p++)
         {

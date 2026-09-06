@@ -157,10 +157,12 @@ modded class OZ_VppAdminMenu
 
                 if (op == "roster")
                 {
-                    OZ_AdminRoster r;
+                    OZ_AdminRoster r = new OZ_AdminRoster();
                     string rerr;
+                    // Копія до першого ж перемальовування: BuildRoster
+                    // читає вісім списків упереміш зі своїми виділеннями.
                     if (JsonFileLoader<OZ_AdminRoster>.LoadData(json, r, rerr) && r)
-                        BuildRoster(r);
+                        BuildRoster(r.Copy());
                     return;
                 }
 
