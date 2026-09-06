@@ -55,9 +55,9 @@ class OZ_Faction
     // розуміє віджет.
     string Color;
 
-    // Чи можна вступити внутрішньоігровою дією. Ядро цього не enforce'ить --
-    // воно лише возить прапорець для того, хто вступ і реалізує.
-    bool Joinable;
+    // ПОЛІВ Joinable, Tags І Extra ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06): їх
+    // виставляли трьома місцями й не читав жоден рядок коду. Ключ, який
+    // лишився в файлі адміна, JsonFileLoader мовчки пропускає.
 
     // Не показувати в переліках. Для службових фракцій: адміністрація,
     // сюжетні угруповання, які ще не мали з'явитись.
@@ -81,16 +81,7 @@ class OZ_Faction
     // серверна -- у «Долга» свій штат, у вчених свій.
     int MaxMembers;
 
-    // Довільні мітки для групування: "military", "hostile-to-all", що
-    // завгодно. Ядро в них не заглядає.
-    ref array<string> Tags;
-
     ref array<ref OZ_FactionRelation> Relations;
-
-    // Чуже добро. Рядок JSON, який ядро ВОЗИТЬ І НЕ ЧИТАЄ -- той самий
-    // принцип, що з носіями даних і з конвертами моста. Чужий мод кладе сюди
-    // свої поля й не мусить чекати, поки ми розширимо схему.
-    string Extra;
 }
 
 class OZ_FactionsConfig : OZ_ConfigBase
@@ -160,12 +151,9 @@ class OZ_FactionsConfig : OZ_ConfigBase
         f.DisplayName   = name;
         f.Short         = tag;
         f.Color         = colour;
-        f.Joinable      = false;
         f.Hidden        = false;
         f.BaseFaction   = baseFaction;
-        f.Tags          = new array<string>();
         f.Relations     = new array<ref OZ_FactionRelation>();
-        f.Extra         = "";
         Factions.Insert(f);
     }
 
@@ -186,7 +174,7 @@ class OZ_FactionsConfig : OZ_ConfigBase
 
     // Справжня міграція, а не штамп версії.
     //
-    // v1 не знав про Short, Tags, Relations і Extra. Файл
+    // v1 не знав про Short і Relations. Файл
     // адміна з версією 1 треба ДОПОВНИТИ умовчаннями, а не перезаписати
     // нашими фракціями: там уже може стояти його власний список.
     override bool Migrate(int from)
@@ -296,9 +284,6 @@ class OZ_FactionsConfig : OZ_ConfigBase
             if (f.Color == "")
                 f.Color = "200 200 200";
 
-            if (!f.Tags)
-                f.Tags = new array<string>();
-
             if (!f.Relations)
                 f.Relations = new array<ref OZ_FactionRelation>();
 
@@ -379,28 +364,18 @@ class OZ_FactionStand
     static const string ALLY     = "ally";
     static const string FRIENDLY = "friendly";
     static const string NEUTRAL  = "neutral";
-    static const string WARY     = "wary";
+    // WARY тут більше немає: на це слово не дивився жоден рядок коду --
+    // Stand() віддає оголошене як є, а перелік слів описує README.
     static const string HOSTILE  = "hostile";
 }
 
-// Договір для чужого мода. Успадковуєш, перекриваєш OrgOf, прив'язуєш одним
-// рядком зі свого OnMissionStart:
+// ДОГОВОРУ ДЛЯ ЧУЖОГО ПОСТАЧАЛЬНИКА ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06).
 //
-//     OZ_Factions.Bind(new MyFactionProvider());
-//
-// Повертати треба id із OZ_Factions.json. Незнайоме id ми покажемо ЯК Є -- краще
-// чуже слово на екрані, ніж мовчазна підміна на «одинак».
-//
-// САМЕ УГРУПОВАННЯ, А НЕ БАЗОВА ФРАКЦІЯ. Чужі постачальники (Expansion) знають
-// рівно про організації -- у них немає поняття «всі в Зоні сталкери». Базову
-// вісь веде гра сама (ТЗ-1 §7), і постачальник її не перебиває.
-class OZ_FactionProvider
-{
-    string OrgOf(PlayerBase player)
-    {
-        return "";
-    }
-}
+// OZ_FactionProvider, Bind(), HasProvider() і гілка постачальника в OrgOf()
+// пролежали без жодного викликача в усій серії. Порожній договір на майбутнє
+// коштує не рядків, а неправди в старшинстві: шапка обіцяла три джерела, а
+// джерел було два. З'явиться Expansion-подібний постачальник -- договір
+// повернеться разом із модом, який його реалізує.
 
 class OZ_Factions
 {
@@ -410,7 +385,6 @@ class OZ_Factions
     // roster. Not a field of OZ_Faction: that class is the admin's file, and
     // a number the bot owns has no business being written there.
     private static ref map<string, int> s_BotLimits;
-    private static ref OZ_FactionProvider s_Provider;
 
     // Ролі Discord: uid -> id УГРУПОВАННЯ. Наповнює міст через прив'язку
     // акаунта; порожня мапа означає «синхронізації немає», а не «усі без
@@ -423,42 +397,52 @@ class OZ_Factions
     // сказати ані слова про базову -- і це нормальний стан, а не втрата.
     private static ref map<string, string> s_BaseByRole;
 
-    // Хто хоче знати про зміни, не опитуючи. Параметр -- Steam64 гравця,
-    // чия фракція змінилась.
-    static ref ScriptInvoker OnChanged = new ScriptInvoker();
-
-    static void Bind(OZ_FactionProvider provider)
-    {
-        s_Provider = provider;
-        OZ_Log.Dbg("faction provider bound");
-    }
-
-    static bool HasProvider()
-    {
-        return s_Provider != null;
-    }
+    // ДЗВІНКА OnChanged ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06): на нього не підписався
+    // ніхто в жодному репозиторії серії, а Invoke стояв у п'яти місцях --
+    // тобто другий сигнал про зміну поруч із OZ_RoleNotify, у якого слухач є.
 
     // Ідемпотентна: хто перший покликав, той і завантажив.
     //
     // Порядок CF-модулів не гарантований, і на цьому стенді він УЖЕ підводив
     // -- рація відпрацювала раніше за КПК. Тому кличуть і ядро, і КПК, і будь
     // хто ще, кому таблиця потрібна раніше за нас.
+    //
+    // Окремої Reload() «для майбутньої гарячої перезагрузки» тут більше немає:
+    // операції, яка її вмикала б, не написано, а один викликач у обгортки був
+    // цей самий метод.
     static void ServerLoad()
     {
         if (s_Cfg)
             return;
-        Reload();
-    }
 
-    // Перечитати з диска примусово. Окремо від ServerLoad саме заради
-    // майбутньої гарячої перезагрузки: тригером буде операція, а не таймер
-    // (порівняння mtime неможливе -- рушій віддає лише FileAttr).
-    static void Reload()
-    {
         MigrateFileName();
 
         s_Cfg = new OZ_FactionsConfig();
         OZ_ConfigLoader<OZ_FactionsConfig>.Load(OZ_Const.PROFILE_DIR + "\\OZ_Factions.json", "factions", s_Cfg);
+
+        Reindex();
+    }
+
+    // Таблиця за id. ПОШУК ЗА НЕЮ -- НАЙГАРЯЧІШИЙ ШЛЯХ УСЬОГО МОДА: кожне
+    // питання «чия це людина» закінчується в Guarded -> IsBase -> Find, а
+    // разом із ним туди ходять NameOf, ColorOf і ставлення. Лінійний обхід
+    // таблиці з порівнянням РЯДКІВ коштував на кожен рядок контакту, на кожен
+    // рядок складу й на кожен маячок.
+    //
+    // Мапа перебудовується там і тільки там, де таблиця міняється: після
+    // завантаження й у ApplyRoster (єдині два місця, які пишуть s_Cfg.Factions).
+    private static ref map<string, OZ_Faction> s_ById = new map<string, OZ_Faction>();
+
+    private static void Reindex()
+    {
+        s_ById.Clear();
+        if (!s_Cfg || !s_Cfg.Factions)
+            return;
+        for (int i = 0; i < s_Cfg.Factions.Count(); i++)
+        {
+            if (s_Cfg.Factions[i] && s_Cfg.Factions[i].Id != "")
+                s_ById.Set(s_Cfg.Factions[i].Id, s_Cfg.Factions[i]);
+        }
     }
 
     // Одноразове перейменування файла реєстру: до 2026-09-05 фракції писали
@@ -554,17 +538,11 @@ class OZ_Factions
     {
         if (id == "")
             return null;
-        if (!s_Cfg)
-            return null;
-        if (!s_Cfg.Factions)
-            return null;
 
-        for (int i = 0; i < s_Cfg.Factions.Count(); i++)
-        {
-            if (s_Cfg.Factions[i].Id == id)
-                return s_Cfg.Factions[i];
-        }
-        return null;
+        OZ_Faction f;
+        if (!s_ById.Find(id, f))
+            return null;
+        return f;
     }
 
     // Усі id. `includeHidden` -- для того, хто справді хоче всі: адмінського
@@ -672,48 +650,53 @@ class OZ_Factions
         return "200 200 200";
     }
 
-    // "R G B" -> ARGB для віджета. Досі колір лежав у таблиці й не читався
-    // ніким: на провід ішла тільки назва.
+    // "R G B" -> ARGB для віджета.
+    //
+    // РОЗБИРАЄМО РАЗ НА КОЛІР, а не раз на виклик: кличеться це на кожен рядок
+    // контакту й кожен рядок складу при кожному перемальовуванні, а Split
+    // щоразу заводив масив і три рази перетворював рядок на число заради
+    // трьох байтів, які не міняються.
+    //
+    // Ключ кеша -- САМ РЯДОК КОЛЬОРУ, а не id фракції: коли реєстр бота
+    // перефарбує фракцію, ключ стане інший, і застарілого запису не буде за
+    // визначенням. Скидати кеш нема потреби взагалі.
+    private static ref map<string, int> s_Rgb = new map<string, int>();
+
     static int ColorARGB(string id, int alpha = 255)
     {
         string raw = ColorOf(id);
 
+        int rgb;
+        if (!s_Rgb.Find(raw, rgb))
+        {
+            rgb = ParseRgb(raw);
+            s_Rgb.Set(raw, rgb);
+        }
+
+        return (rgb & 0x00FFFFFF) | (alpha << 24);
+    }
+
+    // Три канали з "196  64  40". Рахуємо ЗАПОВНЕНІ токени, а не позиції:
+    // подвійні пробіли дають порожні. Канал поза 0..255 підрізаємо -- інакше
+    // одруківка в файлі адміна (чи в реєстрі бота) перетікала б у сусідній
+    // байт і фарбувала б рядок навмання, включно з прозорістю.
+    private static int ParseRgb(string raw)
+    {
         array<string> parts = new array<string>();
         raw.Split(" ", parts);
 
-        // Три окремі змінні, а не масив сталого розміру: подвійні пробіли в
-        // "196  64  40" дають порожні токени, тож рахувати треба ЗАПОВНЕНІ, а
-        // не позиції.
-        int r = -1;
-        int g = -1;
-        int b = -1;
-
+        array<int> c = new array<int>();
         for (int i = 0; i < parts.Count(); i++)
         {
             if (parts[i] == "")
                 continue;
-
-            if (r < 0)
-            {
-                r = parts[i].ToInt();
-                continue;
-            }
-            if (g < 0)
-            {
-                g = parts[i].ToInt();
-                continue;
-            }
-            if (b < 0)
-            {
-                b = parts[i].ToInt();
-                break;
-            }
+            c.Insert(Math.Clamp(parts[i].ToInt(), 0, 255));
         }
 
-        if (b < 0)
-            return ARGB(alpha, 200, 200, 200);
+        if (c.Count() < 3)
+            return ARGB(0, 200, 200, 200);
 
-        return ARGB(alpha, r, g, b);
+        return ARGB(0, c[0], c[1], c[2]);
     }
 
     // ---------------------------------------------------------- членство
@@ -721,16 +704,8 @@ class OZ_Factions
     // Чиє УГРУПОВАННЯ. Старшинство описане в шапці файлу.
     static string OrgOf(PlayerBase player, string uid)
     {
-        if (s_Provider)
-        {
-            if (player)
-            {
-                string fromMod = s_Provider.OrgOf(player);
-                if (fromMod != "")
-                    return Guarded(fromMod);
-            }
-        }
-
+        // `player` лишається в підписі: його вимагає контракт ядра
+        // (OZ_IdentityService.OrgOfPlayer), а відповідь на нього однакова.
         if (uid == "")
             return "";
 
@@ -778,32 +753,9 @@ class OZ_Factions
         return slug;
     }
 
-    // Поставити УГРУПОВАННЯ у файл акаунта. Тільки сервер.
-    //
-    // Постачальник і роль Discord цим НЕ перебиваються -- вони старші, і
-    // мовчазна незгода тут була б найгіршим виходом. Хто ставить угруповання
-    // руками при живому постачальнику, той міняє запасний шлях, і це його
-    // право.
-    //
-    // Викликаючих сьогодні НУЛЬ, і це записано як факт, а не як задача
-    // (ТЗ-1 R5.3): угруповання роздає бот, гра його тільки показує.
-    static void SetOrgOf(string uid, string factionId)
-    {
-        if (!GetGame().IsServer())
-            return;
-        if (uid == "")
-            return;
-
-        OZ_PlayerData d = OZ_PlayerStore.Load(uid);
-        if (!d)
-            return;
-        if (d.OrgFaction == factionId)
-            return;
-
-        d.OrgFaction = factionId;
-        OZ_PlayerStore.MarkDirty(uid);
-        OnChanged.Invoke(uid);
-    }
+    // SetOrgOf ТУТ БІЛЬШЕ НЕМАЄ: викликачів нуль, і це було записано як факт
+    // ще в ТЗ-1 R5.3 -- угруповання роздає бот, гра його лише показує. Поле
+    // OZ_PlayerData.OrgFaction лишається запасним шляхом, який ЧИТАЄ OrgOf.
 
     // Поставити БАЗОВУ фракцію. Кличе перший вхід, і більше ніхто.
     //
@@ -826,7 +778,6 @@ class OZ_Factions
 
         d.BaseFaction = factionId;
         OZ_PlayerStore.MarkDirty(uid);
-        OnChanged.Invoke(uid);
     }
 
     // Перша фракція з BaseFaction: true в порядку файлу, або порожньо.
@@ -865,7 +816,6 @@ class OZ_Factions
             return;
 
         s_ByRole.Set(uid, factionId);
-        OnChanged.Invoke(uid);
     }
 
     // Базова вісь із проекції. Порожній рядок тут НЕ знімає базову: запис
@@ -888,7 +838,6 @@ class OZ_Factions
             return;
 
         s_BaseByRole.Set(uid, factionId);
-        OnChanged.Invoke(uid);
     }
 
     // Синхронізація ролей зникла (міст ліг, гравець відв'язав акаунт).
@@ -915,8 +864,7 @@ class OZ_Factions
             had = true;
         }
 
-        if (had)
-            OnChanged.Invoke(uid);
+
     }
 
     // --------------------------------------------------------- ставлення
@@ -983,7 +931,7 @@ class OZ_Factions
     //
     //   бот  -- слаг, назва, колір. Він створює ролі в Discord, отже дізнається
     //           про них першим, і власник вимагав налаштовувати звідти.
-    //   гра  -- Relations, Joinable, Hidden. Правила симуляції цього сервера,
+    //   гра  -- Relations і Hidden. Правила симуляції цього сервера,
     //           яким у Discord немає де жити.
     //
     // Потік В ОДИН БІК. Бот може ДОДАТИ фракцію й переписати назву та колір;
@@ -1018,12 +966,13 @@ class OZ_Factions
             {
                 f = new OZ_Faction();
                 f.Id            = e.Id;
-                        f.Joinable      = false;
                 f.Hidden        = false;
-                f.Tags          = new array<string>();
                 f.Relations     = new array<ref OZ_FactionRelation>();
-                f.Extra         = "";
                 s_Cfg.Factions.Insert(f);
+                // Одразу в покажчик: далі в цьому ж циклі Find() шукає й
+                // щойно доданих -- інакше другий конверт того самого ростера
+                // завів би фракцію вдруге.
+                s_ById.Set(f.Id, f);
                 added++;
             }
 
@@ -1070,6 +1019,7 @@ class OZ_Factions
                     if (victim.BaseFaction)
                         continue;
                     s_Cfg.Factions.RemoveOrdered(k);
+                    s_ById.Remove(slug);
                     gone++;
                     OZ_Log.Info("factions: " + slug + " removed at the bot - dropped from the table");
                 }
@@ -1100,23 +1050,7 @@ class OZ_Factions
         OZ_Log.Info(m);
     }
 
-    // ------------------------------------------------------------- експорт
-
-    // Уся таблиця одним рядком JSON -- для чужого мода, який хоче її
-    // перекинути кудись цілком: адмінському інструменту, вебредактору, боту.
-    // Порожній рядок означає, що таблиця не завантажена або не серіалізується.
-    static string ExportJson()
-    {
-        if (!s_Cfg)
-            return "";
-
-        string outJson;
-        string err;
-        if (!JsonFileLoader<OZ_FactionsConfig>.MakeData(s_Cfg, outJson, err, false))
-        {
-            OZ_Log.Error("factions export failed: " + err);
-            return "";
-        }
-        return outJson;
-    }
+    // ExportJson ТУТ БІЛЬШЕ НЕМАЄ: писалась «для чужого мода, який захоче
+    // перекинути таблицю цілком», і за весь час не покликав ніхто. Кому
+    // знадобиться -- напише два рядки MakeData у себе.
 }
