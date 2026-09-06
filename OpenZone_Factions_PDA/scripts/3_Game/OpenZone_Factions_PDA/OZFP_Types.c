@@ -42,8 +42,9 @@ class OZ_FactionState
     string InviteFrom    = "";
 
     ref array<ref OZ_FactionMember> Members;
-    // Кого лідер може покликати: друзі поза фракцією, іменами.
-    ref array<string> Candidates;
+
+    // ПОЛЯ Candidates ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06): сервер його наповнював,
+    // клієнт не читав ніколи. Кличуть того, кого вибрано в контактах.
 
     // Драбина ЦІЄЇ фракції, знизу вгору: слаги й підписи поруч. Порожня --
     // звань у фракції не заводили, і кнопки підвищення нема сенсу малювати.
@@ -53,7 +54,6 @@ class OZ_FactionState
     void OZ_FactionState()
     {
         Members    = new array<ref OZ_FactionMember>();
-        Candidates = new array<string>();
         RankIds    = new array<string>();
         RankNames  = new array<string>();
     }

@@ -17,6 +17,13 @@ class OZ_PdaPageFaction : OZ_PdaPage
 {
     private int m_Beat = 0;
     private ref OZ_FactionState m_St;
+
+    // ОСТАННЄ, ЩО ПРИЇХАЛО, ДОСЛІВНО. Сторінка перепитує стан раз на п'ять
+    // секунд І на кожен push, а Paint() відчіплює й створює наново ВСІ рядки
+    // складу -- тобто десяток віджетів на секунду там, де не змінилось нічого.
+    // Сервер серіалізує стан детерміновано (той самий склад у тому самому
+    // порядку дає той самий рядок), тож однаковий JSON означає однаковий екран.
+    private string m_LastJson;
     private Widget m_Rows;
     private ref array<Widget> m_RowWgts;
     private string m_Picked = "";     // ім'я обраного члена
@@ -46,6 +53,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
     {
         m_Rows    = Wgt("FactionRows");
         m_RowWgts = new array<Widget>();
+        m_LastJson = "";
 
         m_BtnKick   = ButtonWidget.Cast(Wgt("BtnFKick"));
         SetText("BtnFKickText", "#STR_OZ_FACTION_KICK");
@@ -104,11 +112,17 @@ class OZ_PdaPageFaction : OZ_PdaPage
             return;
         }
 
+        // Той самий стан -- той самий екран. Вибір рядка сюди не заходить: він
+        // малює себе сам (OnPageClick -> Paint), і на нього це не впливає.
+        if (json == m_LastJson)
+            return;
+
         string err;
         OZ_FactionState st;
         if (!JsonFileLoader<OZ_FactionState>.LoadData(json, st, err) || !st)
             return;
 
+        m_LastJson = json;
         m_St = st;
         Paint();
     }
@@ -241,7 +255,11 @@ class OZ_PdaPageFaction : OZ_PdaPage
     {
         bool lead = m_St && m_St.MeLeader;
         bool mine = m_St && m_St.Org != "";
-        bool pickedOther = m_Picked != "" && m_St && !PickedIsMe();
+
+        // Один пошук замість двох: PickedMember() уже перебирає склад, і
+        // окремий PickedIsMe() робив той самий прохід удруге.
+        OZ_FactionMember picked = PickedMember();
+        bool pickedOther = picked && !picked.Me;
 
         // Лідерські дії над обраним СВОЇМ.
         if (m_BtnKick)
@@ -407,18 +425,6 @@ class OZ_PdaPageFaction : OZ_PdaPage
                 return m_St.Members[i];
         }
         return null;
-    }
-
-    private bool PickedIsMe()
-    {
-        if (!m_St || !m_St.Members)
-            return false;
-        for (int i = 0; i < m_St.Members.Count(); i++)
-        {
-            if (RowKey(m_St.Members[i]) == m_Picked)
-                return m_St.Members[i].Me;
-        }
-        return false;
     }
 
     override bool OnPageClick(Widget w, int x, int y)

@@ -40,12 +40,28 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
 
     private string State(PlayerIdentity sender, out bool ok, out string error)
     {
-        string uid = sender.GetPlainId();
+        string acting = sender.GetPlainId();
+        string uid    = acting;
 
         // Акаунт називає ПРИСТРІЙ -- та сама доктрина, що в розмов.
         OZ_PDA_Base dev = OZ_PdaLookup.HeldBy(sender);
         if (dev && dev.OZ_SessionUid() != "")
             uid = dev.OZ_SessionUid();
+
+        // ЧИТАЄМО ПРИСТРОЄМ, ДІЄМО СОБОЮ -- і поки це розходилось, чужий КПК
+        // видавав свого хазяїна (2026-09-06).
+        //
+        // Стан збирався для сесії ПРИЛАДУ, а кожен OZF_RoleReq виконується від
+        // імені ВІДПРАВНИКА. Той, хто підняв чужий КПК, бачив хазяйське
+        // запрошення, поіменний список його друзів поза фракцією і лідерські
+        // кнопки -- усі до одної безсилі, бо міст питав про лідерство того, хто
+        // тисне. Тобто екран обіцяв владу, якої немає, і водночас показував те,
+        // чого показувати не мав.
+        //
+        // Склад і назва фракції лишаються приладовими: це ЧИТАННЯ, і доктрина
+        // «акаунт називає пристрій» саме про нього. Дії й особисте -- за тим,
+        // хто справді натисне.
+        bool mine = uid == acting;
 
         OZ_FactionState st = new OZ_FactionState();
 
@@ -57,11 +73,16 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
         string slug = OZ_Factions.OrgOfUid(uid);
         st.Org = slug;
 
-        OZ_FactionInvite inv = OZ_FactionInvites.Pending(uid);
-        if (inv)
+        // Запрошення чекає на ЛЮДИНУ, а не на пристрій: приймає його той, хто
+        // тисне, і кнопка «прийняти» шле accept від його імені.
+        if (mine)
         {
-            st.InviteFaction = OZ_Factions.NameOf(inv.Faction);
-            st.InviteFrom    = inv.FromName;
+            OZ_FactionInvite inv = OZ_FactionInvites.Pending(acting);
+            if (inv)
+            {
+                st.InviteFaction = OZ_Factions.NameOf(inv.Faction);
+                st.InviteFrom    = inv.FromName;
+            }
         }
 
         if (slug == "")
@@ -74,7 +95,8 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
         st.FactionName = OZ_Factions.NameOf(slug);
         st.Color       = OZ_Factions.ColorARGB(slug);
         st.MyRank      = OZ_RoleNames.Of(OZ_Roles.RankOf(uid));
-        st.MeLeader    = OZ_Roles.IsLeader(uid);
+        // Лідерські кнопки -- лише тому, чиє лідерство міст і перевірятиме.
+        st.MeLeader    = mine && OZ_Roles.IsLeader(acting);
 
         // Драбина фракції -- щоб лідер міг підвищувати й знижувати, не
         // набираючи слагів: клієнт бере сусідню сходинку сам.
@@ -86,6 +108,13 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
         array<string> uids = new array<string>();
         OZ_Roles.OrgMembers(slug, uids);
 
+        // ХТО В ЗОНІ -- ОДНИМ ПРОХОДОМ. Присутність кожного члена питали в
+        // OZ_ChatWho.Online, а той перебирає GetPlayers() наново: на екран, що
+        // сам оновлюється раз на п'ять секунд і на кожен push, це коштувало
+        // O(склад * присутні). Присутніх ми тут і так перебираємо -- лишається
+        // запам'ятати їх мапою.
+        ref map<string, bool> online = new map<string, bool>();
+
         array<Man> players = new array<Man>();
         GetGame().GetPlayers(players);
         for (int pi = 0; pi < players.Count(); pi++)
@@ -96,6 +125,7 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
             if (!oid)
                 continue;
             string ou = oid.GetPlainId();
+            online.Set(ou, true);
             if (OZ_Factions.OrgOfUid(ou) == slug && uids.Find(ou) == -1)
                 uids.Insert(ou);
         }
@@ -104,43 +134,33 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
 
         for (int i = 0; i < uids.Count(); i++)
         {
+            // Peek, а не Load: відсутньому члену Load завів би файл і тримав
+            // би його в кеші до кінця запуску (див. OZ_PlayerStore).
+            OZ_PlayerData md = OZ_PlayerStore.Peek(uids[i]);
+            if (!md || md.Name == "")
+                continue;   // безіменний кеш нікому нічого не скаже
+
             OZ_FactionMember m = new OZ_FactionMember();
-            OZ_PlayerData md = OZ_PlayerStore.Load(uids[i]);
             m.Name   = md.Name;
             m.Key    = OZ_Names.KeyOf(OZ_PlayerStore.KeyOf(uids[i]));
-            if (m.Name == "")
-                continue;   // безіменний кеш нікому нічого не скаже
             m.Rank    = OZ_RoleNames.Of(OZ_Roles.RankOf(uids[i]));
             m.FRankId = OZ_Roles.FRankOf(uids[i]);
             if (m.FRankId != "")
                 m.FRank = OZ_RoleNames.Of(slug + ":" + m.FRankId);
             m.Leader = OZ_Roles.IsLeader(uids[i]);
-            m.Online = OZ_ChatWho.Online(uids[i]) != null;
+            m.Online = online.Contains(uids[i]);
             m.Me     = uids[i] == uid;
             st.Members.Insert(m);
         }
 
-        // Кандидати на запрошення -- лише лідерові: друзі поза фракцією.
-        if (st.MeLeader)
-        {
-            OZ_PlayerData me = OZ_PlayerStore.Load(uid);
-            for (int f = 0; f < me.Friends.Count(); f++)
-            {
-                // Заморожених не кличуть: у списку контактів вони лишаються
-                // назавжди, але позвати їх нікуди.
-                if (!OZ_PlayerStore.IsLive(me.Friends[f]))
-                    continue;
-
-                string fuid = OZ_PlayerStore.UidOfKey(me.Friends[f]);
-                if (OZ_Factions.OrgOfUid(fuid) == slug)
-                    continue;
-
-                OZ_PlayerData fd = OZ_PlayerStore.Load(fuid);
-                if (fd.Name != "")
-                    st.Candidates.Insert(fd.Name);
-            }
-        }
-
+        // КАНДИДАТІВ НА ЗАПРОШЕННЯ ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06).
+        //
+        // Поле Candidates наповнювалось кожен опит стану -- прохід по друзях
+        // лідера з читанням файла кожного, -- і жоден екран його не читав
+        // ЖОДНОГО разу: кличуть того, кого вибрано в лівій половині вкладки, у
+        // контактах (OZ_PdaPageFaction.ContactPick). Тобто сервер щоп'ять
+        // секунд збирав і слав проводом поіменний список чужих друзів, який
+        // клієнт викидав.
         return Serialise(st, ok, error);
     }
 
@@ -163,10 +183,42 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
 
 // Розголос «ролі змінились»: обидві сторінки, яким не байдуже, чують
 // push і перечитують стан самі.
+//
+// ОДНА РОЗСИЛКА НА ЧЕРГУ ЗМІН, а не одна на кожну зміну (2026-09-06).
+//
+// Розсилка коштує два гарантовані RPC КОЖНОМУ присутньому, тобто O(P) на
+// зміну. Проекції приїжджають ПАЧКАМИ: одне доставлення опиту моста несе
+// стільки конвертів роду "roles", скільки їх назбиралось, а `Fresh` після
+// перепідключення моста -- по конверту на КОЖНОГО прив'язаного гравця. Виходило
+// O(N*P): тридцять гравців у Зоні на перепідключенні моста давали дев'ятсот
+// розсилок, тобто тисячу вісімсот гарантованих RPC в один кадр, і кожен клієнт
+// відповідав на них тисячею запитів стану.
+//
+// Пачка стискається в один прапорець і ОДИН CallLater(0): черга виконує його
+// в наступному тіку, коли всі конверти пачки вже застосовані. Кожен присутній
+// дістає рівно один push на пачку, хоч би скільки проекцій у ній змінилось --
+// а зміст push'а й так порожній, це просто «перечитай стан».
+//
+// Втрачається лише uid, і він тут ніколи не був потрібен: push іде ВСІМ, бо
+// склад чужої фракції й рядок контакту змінюються від чужої ролі так само, як
+// від власної.
 class OZ_PdaRolePush
 {
+    private static bool s_Pending = false;
+
     static void Changed(string uid)
     {
+        if (s_Pending)
+            return;
+
+        s_Pending = true;
+        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(OZ_PdaRolePush.Flush, 0, false);
+    }
+
+    static void Flush()
+    {
+        s_Pending = false;
+
         array<Man> players = new array<Man>();
         GetGame().GetPlayers(players);
 
