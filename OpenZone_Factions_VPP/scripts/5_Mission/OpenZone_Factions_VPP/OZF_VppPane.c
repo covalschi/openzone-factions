@@ -304,9 +304,20 @@ modded class OZ_VppAdminMenu
             if (m_RosterPicked >= 0 && m_RosterPicked < m_Rows.Count())
                 keepUid = m_Rows[m_RosterPicked].Uid;
 
-            m_Rows = r.Rows;
-            if (!m_Rows)
-                m_Rows = new array<ref OZ_AdminRosterRow>();
+            // РЯДКИ -- СВОЇ, А НЕ ЗАГРУЗЧИКОВІ. Панель тримає їх між
+            // оновленнями (2,5 і 9,5 секунди), а адмін клацає по них іще
+            // пізніше: картка гравця й префікс драбини читаються з Org та
+            // Uid хвилинами після розбору. Причина довга й лежить в
+            // OZ_RoleView.Copy -- ідіома в репозиторії одна.
+            m_Rows = new array<ref OZ_AdminRosterRow>();
+            if (r.Rows)
+            {
+                for (int ri2 = 0; ri2 < r.Rows.Count(); ri2++)
+                {
+                    if (r.Rows[ri2])
+                        m_Rows.Insert(r.Rows[ri2].Copy());
+                }
+            }
             m_RosterPicked = -1;
             m_WipeArmed = false;
 

@@ -24,6 +24,20 @@ class OZ_FactionMember
     bool Leader = false;
     bool Online = false;
     bool Me     = false;
+
+    OZ_FactionMember Copy()
+    {
+        OZ_FactionMember c = new OZ_FactionMember();
+        c.Name    = Name;
+        c.Key     = Key;
+        c.Rank    = Rank;
+        c.FRank   = FRank;
+        c.FRankId = FRankId;
+        c.Leader  = Leader;
+        c.Online  = Online;
+        c.Me      = Me;
+        return c;
+    }
 }
 
 class OZ_FactionState
@@ -65,5 +79,44 @@ class OZ_FactionState
         Members    = new array<ref OZ_FactionMember>();
         RankIds    = new array<string>();
         RankNames  = new array<string>();
+    }
+
+    // Копія, яку збудував скрипт. Сторінка тримає стан МІЖ ОПИТАМИ -- п'ять
+    // секунд і довше, -- і перемальовує з нього шапку, склад і тексти
+    // підтверджень, тобто читає ті самі поля хвилинами після розбору.
+    // Причина довга й лежить в OZ_RoleView.Copy (OpenZone_Factions);
+    // ідіома в репозиторії одна.
+    OZ_FactionState Copy()
+    {
+        OZ_FactionState c = new OZ_FactionState();
+        c.Org           = Org;
+        c.FactionName   = FactionName;
+        c.Color         = Color;
+        c.MyRank        = MyRank;
+        c.MeMember      = MeMember;
+        c.MeLeader      = MeLeader;
+        c.InviteFaction = InviteFaction;
+        c.InviteFrom    = InviteFrom;
+
+        if (Members)
+        {
+            for (int i = 0; i < Members.Count(); i++)
+            {
+                if (Members[i])
+                    c.Members.Insert(Members[i].Copy());
+            }
+        }
+        if (RankIds)
+        {
+            for (int j = 0; j < RankIds.Count(); j++)
+                c.RankIds.Insert(RankIds[j]);
+        }
+        if (RankNames)
+        {
+            for (int k = 0; k < RankNames.Count(); k++)
+                c.RankNames.Insert(RankNames[k]);
+        }
+
+        return c;
     }
 }

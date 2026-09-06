@@ -32,6 +32,25 @@ class OZ_AdminRosterRow
     // У Зоні зараз. Ростер тепер перелічує й відсутніх (ТЗ-4 R-C4.2), і
     // консоль мусить їх розрізняти: відсутнього не покличеш до слова.
     bool   Online  = false;
+
+    // Копія, яку збудував скрипт: рядок ростера консоль тримає між
+    // оновленнями й читає з нього картку та префікс драбини. Причина довга
+    // й лежить в OZ_RoleView.Copy -- ідіома в репозиторії одна.
+    OZ_AdminRosterRow Copy()
+    {
+        OZ_AdminRosterRow c = new OZ_AdminRosterRow();
+        c.Name   = Name;
+        c.Uid    = Uid;
+        c.Base   = Base;
+        c.Org    = Org;
+        c.DName  = DName;
+        c.Traits = Traits;
+        c.Rank   = Rank;
+        c.FRank  = FRank;
+        c.Leader = Leader;
+        c.Online = Online;
+        return c;
+    }
 }
 
 class OZ_AdminRoster
@@ -411,6 +430,8 @@ class OZF_RosterReply : OZ_BridgeReply
             return;
         }
 
+        // Копії тут не треба: рядки конверта читає RowOf у цьому ж виклику й
+        // складає своє. Тримати їх довше нікому -- див. OZ_RoleView.Copy.
         Send(to, v.Rows, "");
     }
 
