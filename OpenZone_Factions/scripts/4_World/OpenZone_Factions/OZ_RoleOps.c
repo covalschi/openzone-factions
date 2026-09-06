@@ -184,17 +184,21 @@ class OZ_RoleOps
     //
     // Прапорець НЕ приходить від клієнта: у конверті RPC такого поля немає, і
     // виставити його може лише код на сервері.
-    static void RequestAs(PlayerIdentity tell, string actorUid, string targetUid, string op, string arg, bool consented = false)
+    //
+    // ПОВЕРТАЄ «лист пішов до моста». false -- відмовили тут, на місці, і
+    // НІЧОГО не сталось ані в грі, ані в Discord; тому викликач, який тримав
+    // щось одноразове (запрошення), має право лишити його на місці.
+    static bool RequestAs(PlayerIdentity tell, string actorUid, string targetUid, string op, string arg, bool consented = false)
     {
         if (!GetGame().IsServer())
-            return;
+            return false;
         if (!tell)
-            return;
+            return false;
 
         if (targetUid == "")
         {
             OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NO_TARGET");
-            return;
+            return false;
         }
 
         // Мовчазний міст -- відмова з причиною, і НІЧОГО не змінюється. Черги
@@ -203,7 +207,7 @@ class OZ_RoleOps
         if (!OZ_BridgeClient.Alive())
         {
             OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NO_BRIDGE");
-            return;
+            return false;
         }
 
         // Адміном може бути ЛИШЕ той, від чийого імені просять, і лише коли
@@ -220,7 +224,7 @@ class OZ_RoleOps
             if (!consented && !admin)
             {
                 OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_NEEDS_INVITE");
-                return;
+                return false;
             }
         }
 
@@ -238,7 +242,7 @@ class OZ_RoleOps
         if (!admin && !consented)
         {
             if (!Allowed(tell, actorUid, op, arg, targetUid))
-                return;
+                return false;
         }
 
         OZ_RoleAsk a = new OZ_RoleAsk();
@@ -258,7 +262,7 @@ class OZ_RoleOps
         if (!admin)
             a.ActorUid = actorUid;
 
-        // ОДИН ДЗВІНОК ДО МОСТА НА СЕКУНДУ НА ЛЮДИНУ.
+        // ОДИН ДЗВІНОК ДО МОСТА НА СЕКУНДУ НА КЛІЄНТА.
         //
         // Кожен OZF_RoleReq, що дійшов сюди, -- це HTTP до моста, а звідти
         // запит до Discord. Кнопки на екрані натискають руками, але RPC
@@ -268,17 +272,25 @@ class OZ_RoleOps
         //
         // Стеля стоїть перед самим дзвінком: відмови, які до моста не
         // доходять (не лідер, не твій, немає цілі), нічого не коштують і
-        // квоти не з'їдають. Ключ -- АКТОР: прийняте запрошення виконується
-        // правом лідера, і його секунда не мусить залежати від того, скільки
-        // людей саме зараз погодилось.
+        // квоти не з'їдають.
+        //
+        // КЛЮЧ -- ТОЙ, ХТО ТИСНЕ (tell), а не той, чиїм правом користуємось.
+        // Потік іде з клієнтського RPC, отже й лічильник мусить стояти на
+        // клієнті. На акторі він робив протилежне обіцяному: прийняте
+        // запрошення виконується правом ЛІДЕРА, тож лідер, який щойно когось
+        // підвищив, тією самою секундою відмовляв кожному, хто натиснув
+        // «прийняти», -- і чужа секунда залежала рівно від того, скільки людей
+        // погодилось просто зараз. Той, хто приймає, залити міст не може: його
+        // запрошення одноразове.
+        string asker = tell.GetPlainId();
         int now = GetGame().GetTime();
         int last;
-        if (s_LastAsk.Find(actorUid, last) && now - last < ASK_GAP_MS && now >= last)
+        if (s_LastAsk.Find(asker, last) && now - last < ASK_GAP_MS && now >= last)
         {
             OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_SLOW_DOWN");
-            return;
+            return false;
         }
-        s_LastAsk.Set(actorUid, now);
+        s_LastAsk.Set(asker, now);
 
         string letter;
         string err;
@@ -286,13 +298,14 @@ class OZ_RoleOps
         {
             OZ_Log.Error("roles: cannot build the letter: " + err);
             OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_INTERNAL");
-            return;
+            return false;
         }
 
-        OZ_BridgeClient.Call("v1/roles/apply", letter, new OZ_RoleReply(tell.GetPlainId(), op));
+        OZ_BridgeClient.Call("v1/roles/apply", letter, new OZ_RoleReply(asker, op));
+        return true;
     }
 
-    // Коли цей актор востаннє дзвонив мостом. Мапа росте лише на тих, хто
+    // Коли цей клієнт востаннє дзвонив мостом. Мапа росте лише на тих, хто
     // справді щось просив, і чиститься виходом (OZF_Module.OnInvokeDisconnect
     // -> Forget).
     private static ref map<string, int> s_LastAsk = new map<string, int>();
@@ -572,19 +585,25 @@ class OZ_FactionInvites
         }
 
 
-        // ЗНІМАЄМО ДО виклику моста. Запрошення, яке не спрацювало через
-        // мовчазний міст, усе одно використане: інакше воно лишалось би
-        // висіти й спрацювало б від наступного натискання, коли лідер уже
-        // передумав.
-        s_By.Remove(me);
-
         // Актор -- ЛІДЕР, а не той, хто приймає: саме його лідерство
         // перевіряє міст. Він може бути офлайн, і це не заважає -- міст
         // дивиться на його ролі в Discord, а не на присутність у Зоні.
         // Право дає ЛІДЕР, відповідь бачить той, хто прийняв.
         // consented=true -- ЄДИНЕ місце, де це ставиться. Людина щойно
         // натиснула «прийняти» на запрошенні, яке бачила своїми очима.
-        OZ_RoleOps.RequestAs(who, inv.FromUid, me, OZ_RoleOp.FACTION_SET, inv.Faction, true);
+        //
+        // ЗНІМАЄМО ПІСЛЯ ТОГО, ЯК ЛИСТ ПІШОВ, і тільки тоді.
+        //
+        // Тут стояло «знімаємо до виклику моста», і кожна відмова ще ДО
+        // дзвінка -- мовчазний міст, стеля запитів, збій серіалізації --
+        // з'їдала запрошення назавжди: людині казали «зачекай і спробуй
+        // знову», а повтор відповідав «запрошення немає». Повернути його міг
+        // тільки новий лист лідера.
+        //
+        // Відмова САМОГО моста -- інша річ: лист пішов, право спитали,
+        // запрошення використане, а причину принесе OZ_RoleReply.OnBody.
+        if (OZ_RoleOps.RequestAs(who, inv.FromUid, me, OZ_RoleOp.FACTION_SET, inv.Faction, true))
+            s_By.Remove(me);
     }
 
 

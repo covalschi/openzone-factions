@@ -157,6 +157,39 @@ class OZ_BridgeAck
     string Why = "";
 }
 
+// ЧИЙ ВАЙП УЖЕ В ДОРОЗІ.
+//
+// Пермадес не ідемпотентний, і саме тому подвійне натискання коштує дорого:
+// обидва листи доїжджають до `ack.Ok`, обидві відповіді кличуть
+// OZ_PlayerWipe.Local, і покоління стрибає через два -- а Freeze між ними
+// записує друге, вже порожнє життя окремим файлом могили. Консоль тримає
+// підтвердження (WIPE двічі), але воно захищає від випадкового кліку, а не
+// від другого кліку по озброєній кнопці, поки міст думає над першим.
+//
+// Ключ -- ЦІЛЬ, а не адмін: два адміни на одного небіжчика -- та сама шкода.
+// Знімається в OZ_AdminWipeReply обома дорогами, і третьої в нього немає:
+// мовчання рушія приходить в OnQuiet, а той за замовчуванням кличе OnFail.
+class OZ_WipeInFlight
+{
+    private static ref map<string, bool> s_By = new map<string, bool>();
+
+    static bool Busy(string uid)
+    {
+        return s_By.Contains(uid);
+    }
+
+    static void Begin(string uid)
+    {
+        s_By.Set(uid, true);
+    }
+
+    static void Done(string uid)
+    {
+        if (s_By.Contains(uid))
+            s_By.Remove(uid);
+    }
+}
+
 // Мiст вiдповiв на вайп -- ТУТ І ВІДБУВАЄТЬСЯ ІГРОВА ПОЛОВИНА.
 //
 // Порядок перевернуто 2026-09-06, і це не косметика. Гра робила своє
@@ -187,6 +220,8 @@ class OZ_AdminWipeReply : OZ_BridgeReply
 
     override void OnBody(string json)
     {
+        OZ_WipeInFlight.Done(m_Uid);
+
         PlayerIdentity to = OZ_Link.Online(m_AdminUid);
 
         OZ_BridgeAck ack;
@@ -217,6 +252,8 @@ class OZ_AdminWipeReply : OZ_BridgeReply
 
     override void OnFail(int code)
     {
+        OZ_WipeInFlight.Done(m_Uid);
+
         OZ_Log.Warn("admin: the wipe of " + m_Uid + " never reached the bridge - nothing was changed in the game");
 
         PlayerIdentity to = OZ_Link.Online(m_AdminUid);
@@ -525,6 +562,14 @@ class OZF_AdminSection : OZ_AdminSection
                 return "";
             }
 
+            // Другий натиск, поки перший у дорозі, -- відмова, а не другий
+            // пермадес. Причина довга й лежить в OZ_WipeInFlight.
+            if (OZ_WipeInFlight.Busy(uid))
+            {
+                error = "STR_OZ_ERR_SLOW_DOWN";
+                return "";
+            }
+
             OZ_AdminWipeAsk a = new OZ_AdminWipeAsk();
             a.Uid = uid;
             // Гру вiдпрацюємо самi, з вiдповiдi, -- хай мiст не шле поштовх назад.
@@ -539,6 +584,7 @@ class OZF_AdminSection : OZ_AdminSection
             }
 
             OZ_Log.Info("admin: player " + uid + " wipe asked by " + sender.GetPlainId());
+            OZ_WipeInFlight.Begin(uid);
             OZ_BridgeClient.Call("v1/player/wipe", letter, new OZ_AdminWipeReply(sender.GetPlainId(), op, uid));
 
             // Вiдповiдь пiде з OZ_AdminWipeReply, коли мiст вiдпишеться.
