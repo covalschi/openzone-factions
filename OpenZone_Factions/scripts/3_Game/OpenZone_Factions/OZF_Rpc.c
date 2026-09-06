@@ -75,12 +75,21 @@ class OZF_Rpc
     //
     // Тож ріжемо самі, на тому ж порозі, що й довгі тіла ядра, і різаком ядра
     // -- по межі символу, бо Length()/Substring() байтові, а текст UTF-8.
+    //
+    // `op` РІЖЕТЬСЯ ТАК САМО. Він приходить із клієнтського RPC
+    // (OZF_Module, data.param1) і повертається сюди недоторканим: клієнт із
+    // п'ятикілобайтною операцією псував собі ж повідомлення у відповідь.
+    // Шкода тільки своя, але ціна перевірки -- один рядок, а «поле з
+    // проводу, яке ми не міряли» не мусить існувати взагалі.
     static void RoleRespond(PlayerIdentity to, string op, bool ok, string why)
     {
-        string say = why;
-        if (say.Length() > OZ_Const.RPC_STR_CHUNK)
-            say = say.Substring(0, OZ_Rpc.CutSafe(say, 0, OZ_Const.RPC_STR_CHUNK));
+        OZ_Rpc.Notice(to, Clip(op), ok, Clip(why));
+    }
 
-        OZ_Rpc.Notice(to, op, ok, say);
+    private static string Clip(string s)
+    {
+        if (s.Length() <= OZ_Const.RPC_STR_CHUNK)
+            return s;
+        return s.Substring(0, OZ_Rpc.CutSafe(s, 0, OZ_Const.RPC_STR_CHUNK));
     }
 }
