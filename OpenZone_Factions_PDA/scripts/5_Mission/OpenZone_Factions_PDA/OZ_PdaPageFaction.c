@@ -198,7 +198,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
         if (!w)
             return;
 
-        w.SetName(RowKey(m));
+        w.SetName(m.Key);
         w.SetUserID(8);
         m_RowWgts.Insert(w);
 
@@ -234,7 +234,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
 
         Widget pick = w.FindAnyWidget("FRowPick");
         if (pick)
-            pick.Show(RowKey(m) == m_Picked);
+            pick.Show(m.Key == m_Picked);
     }
 
     // Кого вибрано в СУСІДНІЙ половині вкладки. Саме його кличуть у
@@ -311,25 +311,13 @@ class OZ_PdaPageFaction : OZ_PdaPage
         return m_St.RankIds[at - 1];
     }
 
-    // Ім'я віджета рядка й m_Picked -- ключ персонажа; ім'я лише тоді, коли
-    // сервер старий і ключа не дав.
-    private string RowKey(OZ_FactionMember m)
-    {
-        if (m.Key != "")
-            return m.Key;
-        return m.Name;
-    }
-
-    // Адреса обраного для сервера: ключем (ТЗ-4 R-C4.1), а без ключа --
-    // іменем, як раніше.
-    private string Target()
-    {
-        OZ_FactionMember m = PickedMember();
-        if (m && m.Key != "")
-            return "key:" + m.Key;
-        return m_Picked;
-    }
-
+    // Адреса члена фракції -- КЛЮЧ ПЕРСОНАЖА, і тільки він.
+    //
+    // Ім'я віджета рядка, m_Picked і адреса на проводі -- одне й те саме
+    // число. Запасний шлях «а якщо ключа немає -- візьми ім'я» тут більше не
+    // потрібен: сервер ставить Key кожному членові (OZ_Names.KeyOf від
+    // "<uid>#<gen>" -- хеш, який порожнім не буває), а адресації за іменем
+    // сервер більше не приймає взагалі.
     private string PickedLabel()
     {
         OZ_FactionMember m = PickedMember();
@@ -421,7 +409,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
             return null;
         for (int i = 0; i < m_St.Members.Count(); i++)
         {
-            if (RowKey(m_St.Members[i]) == m_Picked)
+            if (m_St.Members[i].Key == m_Picked)
                 return m_St.Members[i];
         }
         return null;
@@ -458,14 +446,14 @@ class OZ_PdaPageFaction : OZ_PdaPage
         if (w == m_BtnKick)
         {
             if (m_Picked != "" && Confirm("kick:" + m_Picked, Ask("STR_OZ_F_ASK_KICK", PickedLabel())))
-                OZF_Rpc.RoleRequest(OZ_RoleOp.FACTION_CLEAR, Target(), "");
+                OZF_Rpc.RoleRequest(OZ_RoleOp.FACTION_CLEAR, "key:" + m_Picked, "");
             return true;
         }
 
         if (w == m_BtnLead)
         {
             if (m_Picked != "" && Confirm("lead:" + m_Picked, Ask("STR_OZ_F_ASK_LEAD", PickedLabel())))
-                OZF_Rpc.RoleRequest(OZ_RoleOp.LEADER_TRANSFER, Target(), "");
+                OZF_Rpc.RoleRequest(OZ_RoleOp.LEADER_TRANSFER, "key:" + m_Picked, "");
             return true;
         }
 
@@ -494,7 +482,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
             string next = NextRank(w == m_BtnPromote);
             string ask  = T("STR_OZ_F_ASK_RANK") + " " + PickedLabel() + ": " + RankLabel(next) + " - " + T("STR_OZ_F_AGAIN");
             if (Confirm("rank:" + m_Picked + ":" + next, ask))
-                OZF_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, Target(), next);
+                OZF_Rpc.RoleRequest(OZ_RoleOp.FRANK_SET, "key:" + m_Picked, next);
             return true;
         }
 

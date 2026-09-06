@@ -149,42 +149,13 @@ class OZ_RoleOps
         return uid;
     }
 
-    // Кому належить це ім'я, серед тих, хто зараз у Зоні.
+    // АДРЕСАЦІЇ ЗА ІМЕНЕМ ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06).
     //
-    // Однакові імена можливі, і тоді ми НЕ ВГАДУЄМО: порожнє означає «не
-    // знайшли», і дія чесно не відбувається. Вибрати одного з двох Сидорових
-    // навмання гірше за відмову -- другий не зрозуміє, за що його вигнали.
-    static string UidByName(string name, string exceptUid)
-    {
-        if (name == "")
-            return "";
-
-        array<Man> players = new array<Man>();
-        GetGame().GetPlayers(players);
-
-        string found = "";
-
-        for (int i = 0; i < players.Count(); i++)
-        {
-            if (!players[i])
-                continue;
-
-            PlayerIdentity id = players[i].GetIdentity();
-            if (!id)
-                continue;
-            if (id.GetPlainId() == exceptUid)
-                continue;
-            if (id.GetName() != name)
-                continue;
-
-            if (found != "")
-                return "";
-
-            found = id.GetPlainId();
-        }
-
-        return found;
-    }
+    // UidByName шукав ціль серед присутніх за ігровим іменем і чесно
+    // відмовляв на тезках -- запасний шлях із часів, коли ключа персонажа ще
+    // не було. Відколи він є (ТЗ-4 R-C4.1), жоден клієнт серії імені не шле:
+    // сторінка фракції адресує "key:", консоль VPP -- "uid:". Шлях, яким
+    // ніхто не ходить, лишався єдиним, що мовчки не працювало на відсутніх.
 
     // Попросити міст змінити ролі. Особа актора -- ЗАВЖДИ з sender.
     static void Request(PlayerIdentity actor, string targetUid, string op, string arg)
@@ -203,11 +174,7 @@ class OZ_RoleOps
     //
     // Викликати це можна лише зсередини: назвати чуже ім'я клієнт не може, бо
     // в конверті RPC такого поля немає.
-    static void RequestAs(PlayerIdentity tell, string actorUid, string targetUid, string op, string arg)
-    {
-        RequestAs(tell, actorUid, targetUid, op, arg, false);
-    }
-
+    //
     // consented -- «за цим стоїть згода людини, яку міняють».
     //
     // Ставить його ТІЛЬКИ прийняте запрошення, і саме він відмикає
@@ -217,7 +184,7 @@ class OZ_RoleOps
     //
     // Прапорець НЕ приходить від клієнта: у конверті RPC такого поля немає, і
     // виставити його може лише код на сервері.
-    static void RequestAs(PlayerIdentity tell, string actorUid, string targetUid, string op, string arg, bool consented)
+    static void RequestAs(PlayerIdentity tell, string actorUid, string targetUid, string op, string arg, bool consented = false)
     {
         if (!GetGame().IsServer())
             return;
@@ -291,6 +258,28 @@ class OZ_RoleOps
         if (!admin)
             a.ActorUid = actorUid;
 
+        // ОДИН ДЗВІНОК ДО МОСТА НА СЕКУНДУ НА ЛЮДИНУ.
+        //
+        // Кожен OZF_RoleReq, що дійшов сюди, -- це HTTP до моста, а звідти
+        // запит до Discord. Кнопки на екрані натискають руками, але RPC
+        // надсилає КЛІЄНТ, і ніщо не заважало йому слати «піти з фракції»
+        // хоч кожен кадр: один гравець перетворював свій кадровий цикл на
+        // потік запитів до чужого API, за який відповідає власник сервера.
+        //
+        // Стеля стоїть перед самим дзвінком: відмови, які до моста не
+        // доходять (не лідер, не твій, немає цілі), нічого не коштують і
+        // квоти не з'їдають. Ключ -- АКТОР: прийняте запрошення виконується
+        // правом лідера, і його секунда не мусить залежати від того, скільки
+        // людей саме зараз погодилось.
+        int now = GetGame().GetTime();
+        int last;
+        if (s_LastAsk.Find(actorUid, last) && now - last < ASK_GAP_MS && now >= last)
+        {
+            OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_SLOW_DOWN");
+            return;
+        }
+        s_LastAsk.Set(actorUid, now);
+
         string letter;
         string err;
         if (!JsonFileLoader<OZ_RoleAsk>.MakeData(a, letter, err, false))
@@ -301,6 +290,19 @@ class OZ_RoleOps
         }
 
         OZ_BridgeClient.Call("v1/roles/apply", letter, new OZ_RoleReply(tell.GetPlainId(), op));
+    }
+
+    // Коли цей актор востаннє дзвонив мостом. Мапа росте лише на тих, хто
+    // справді щось просив, і чиститься виходом (OZF_Module.OnInvokeDisconnect
+    // -> Forget).
+    private static ref map<string, int> s_LastAsk = new map<string, int>();
+    private static const int ASK_GAP_MS = 1000;
+
+    // Гравець вийшов -- його секунда більше нікого не обходить.
+    static void ForgetActor(string uid)
+    {
+        if (s_LastAsk.Contains(uid))
+            s_LastAsk.Remove(uid);
     }
 
     // Чи можна цьому гравцеві просити саме це. Дзеркало leaderMay() на мості
@@ -367,30 +369,15 @@ class OZ_RoleOps
         if (op == OZ_RoleOp.FRANK_SET)
             return true;
 
-        if (op == OZ_RoleOp.POST_ADD || op == OZ_RoleOp.POST_REMOVE)
-        {
-            // Посада мусить належати ЙОГО фракції -- слаг має вигляд
-            // "duty:guard", і префікс перевіряється тут, щоб лідер Долгу не
-            // роздавав посад Волі.
-            if (arg.IndexOf(mine + ":") != 0)
-            {
-                OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_OTHER_FACTION");
-                return false;
-            }
+        // ЛІДЕРСЬКОЇ ГІЛКИ ПІД post.add/post.remove ТУТ БІЛЬШЕ НЕМАЄ
+        // (2026-09-06). Жоден екран серії цих операцій не шле -- ні сторінка
+        // фракції в КПК, ні панель FACTIONS: посади роздає бот своїми
+        // командами. Гілка перевіряла префікс фракції й забороняла видавати
+        // "leader" -- правила для дороги, якою ніхто не ходив. Адмін
+        // лишається при своєму: вище стоїть `if (!admin ...)`, і консоль сюди
+        // не заходить взагалі.
 
-            // Лідерство ПЕРЕДАЮТЬ, а не роздають: лідер, який може видати
-            // посаду лідера, здатен зробити другого -- і тоді жоден із них не
-            // лідер.
-            if (arg == mine + ":leader")
-            {
-                OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_USE_TRANSFER");
-                return false;
-            }
-
-            return true;
-        }
-
-        // Звання й мітки -- не лідерська справа.
+        // Звання, мітки й посади -- не лідерська справа.
         OZF_Rpc.RoleRespond(tell, op, false, "STR_OZ_ERR_ADMIN_ONLY");
         return false;
     }
@@ -401,8 +388,10 @@ class OZ_RoleOp
 {
     static const string FACTION_SET     = "faction.set";
     static const string FACTION_CLEAR   = "faction.clear";
-    static const string POST_ADD        = "post.add";
-    static const string POST_REMOVE     = "post.remove";
+    // POST_ADD / POST_REMOVE ТУТ БІЛЬШЕ НЕМАЄ: рядки лишаються словником
+    // МОСТА (v1/roles/apply їх розуміє), але гра їх не шле нізвідки, тож
+    // тримати для них константи означало б обіцяти операцію, якої в жодному
+    // екрані немає. З'явиться кнопка -- повернуться два рядки.
     static const string TRAIT_ADD       = "trait.add";
     static const string TRAIT_REMOVE    = "trait.remove";
     static const string RANK_SET        = "rank.set";
@@ -511,6 +500,18 @@ class OZ_FactionInvites
 
         if (!s_By)
             s_By = new map<string, ref OZ_FactionInvite>();
+
+        // ПРОСТРОЧЕНІ ПРИБИРАЄМО ПОПУТНО. Pending() знімає лише те, про що
+        // спитали, а запрошення до того, хто в Зону так і не зайшов, не питає
+        // ніхто: воно лежало в мапі до кінця запуску. Прохід тут коштує
+        // стільки, скільки запрошень висить одночасно, тобто нічого.
+        int nowMs = GetGame().GetTime();
+        for (int e = s_By.Count() - 1; e >= 0; e--)
+        {
+            OZ_FactionInvite old = s_By.GetElement(e);
+            if (!old || nowMs > old.ExpiresAt)
+                s_By.Remove(s_By.GetKey(e));
+        }
 
         OZ_FactionInvite inv = new OZ_FactionInvite();
         inv.Faction   = mine;
