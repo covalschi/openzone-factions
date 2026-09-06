@@ -102,11 +102,9 @@ class OZF_LoadoutsConfig : OZ_ConfigBase
         Presets.Insert(ex);
     }
 
-    override bool Migrate(int from)
-    {
-        Version = LatestVersion();
-        return true;
-    }
+    // Migrate() тут не перекривається: умовчання OZ_ConfigBase робить рівно
+    // те саме -- штампує версію й каже «вдалось», -- бо схема цього файла ще
+    // не мінялась жодного разу.
 
     // Класнейми перевіряються ТУТ, при завантаженні, а не на появі (R6.4);
     // щабель без відомого пресета -- попередження й геть, інакше він
@@ -297,6 +295,11 @@ class OZF_LoadoutService : OZ_LoadoutService
     // повернення, і локальний об'єкт на цю мить був би вже знищений.
     private ref OZ_LoadoutPreset m_Composed;
 
+    // Про що вже поскаржились цього запуску. Статичні, бо це стан ФАЙЛА, а
+    // не служби: перечитають конфіг -- перезапустять сервер.
+    private static ref map<string, bool> s_WarnedNoPreset = new map<string, bool>();
+    private static bool s_WarnedNoBase = false;
+
     void OZF_LoadoutService()
     {
         m_Composed = new OZ_LoadoutPreset();
@@ -360,20 +363,41 @@ class OZF_LoadoutService : OZ_LoadoutService
                 // -- це одруківка адміна, і карати за неї гравця не можна.
                 if (OZ_Factions.FirstBaseId() == "")
                 {
-                    OZ_Log.Warn("loadouts: no base faction is declared in OZ_Factions.json - the spawn of " + uid + " is left to the mission");
+                    // Так само раз: жодної базової фракції в файлі -- це
+                    // одруківка адміна, і сказати про неї треба один раз.
+                    if (!s_WarnedNoBase)
+                    {
+                        s_WarnedNoBase = true;
+                        OZ_Log.Warn("loadouts: no base faction is declared in OZ_Factions.json - spawns are left to the mission");
+                    }
                     return OZ_LoadoutVerdict.NO_OPINION;
                 }
                 return OZ_LoadoutVerdict.NAKED;
             }
 
             // Фракція без жодного пресета -- NO_OPINION і WARNING з іменем
-            // фракції, не NAKED (R3.3).
+            // фракції, не NAKED (R3.3). Називаємо угруповання, коли базова
+            // хоч якийсь щабель має: тоді винне саме воно.
             string named = base;
-            if (org != "" && !OZF_Loadouts.HasAnyRung(base))
-                named = base;
-            else if (org != "")
+            if (org != "" && OZF_Loadouts.HasAnyRung(base))
                 named = org;
-            OZ_Log.Warn("loadouts: faction " + named + " has no preset - the spawn of " + uid + " is left to the mission");
+
+            // РАЗ НА ФРАКЦІЮ ЗА ЗАПУСК, а не на кожну появу.
+            //
+            // Це стан КОНФІГУ, а не подія гри: він не міняється від того, що
+            // з'явився ще один гравець. Рядок на кожну появу заповнював лог
+            // сервера, де таких фракцій дві-три, рівно тим самим текстом --
+            // і топив у собі те, що справді сталось. Приклад називаємо
+            // першим uid-ом, решта йде в Dbg.
+            if (!s_WarnedNoPreset.Contains(named))
+            {
+                s_WarnedNoPreset.Set(named, true);
+                OZ_Log.Warn("loadouts: faction " + named + " has no preset - the spawn of " + uid + " and of everybody else in it is left to the mission");
+            }
+            else
+            {
+                OZ_Log.Dbg("loadouts: faction " + named + " has no preset - the spawn of " + uid + " is left to the mission");
+            }
             return OZ_LoadoutVerdict.NO_OPINION;
         }
 

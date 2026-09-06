@@ -7,6 +7,8 @@ It is a companion of [OpenZone Core](https://github.com/covalschi/openzone-core)
 not a part of it. Core knows only the *questions* about a player's affiliation
 (`OZ_Identity`: which organisation, which stand towards another player, who
 leads) and answers them with "none" on its own; this mod provides the answers.
+The same shape carries the spawn loadout: Core strips and dresses
+(`OZ_LoadoutService`), this mod decides who wears what.
 A server without it runs Core and the PDA exactly as before, just without a
 faction tab.
 
@@ -14,12 +16,30 @@ faction tab.
 
 | PBO | What it does | Needs |
 |---|---|---|
-| `OpenZone_Factions` | factions, roles, ranks, roster, permadeath, the role channel on Core's transport, the FACTIONS admin section | Core, the Discord bridge |
+| `OpenZone_Factions` | factions, roles, ranks, roster, permadeath, spawn loadouts, its own CF RPC channel (`OpenZone_Factions` / `OZF_RoleReq`), the FACTIONS admin section | Core, the Discord bridge |
 | `OpenZone_Factions_PDA` | the **Faction** tab of the PDA (the right half of the contacts screen) | Core, Factions, [OpenZone PDA](https://github.com/covalschi/openzone-pda) |
 | `OpenZone_Factions_VPP` | the FACTIONS pane in the VPP Admin Tools window | Core, Factions, `OpenZone_VPP`, VPP Admin Tools |
 
 Each glue PBO is optional and depends on both sides it glues; a server without
 the PDA or without VPP simply leaves that PBO out.
+
+### Spawn loadouts
+
+`$profile:OpenZone\OZ_Factions_Loadouts.json` decides what a character wears
+when he spawns. Three sections:
+
+- `Presets` -- named sets of items (`Items[]`, each with `ClassName`,
+  `SlotName`, `Quantity`, `Health01`, `QuickBar` and a nested `Inside[]`).
+- `Ladder` -- rungs, `Faction` + `Rank` -> `Preset`. An empty `Rank` covers the
+  whole faction; for an organisation `Rank` is an internal rank slug, for a base
+  faction a stalker rank slug. The ladder is walked organisation+rank,
+  organisation, base+rank, base.
+- `Modifiers` -- per faction, a list keyed by a post or trait slug: `Replace`
+  swaps by slot (last one wins), `Add` accumulates.
+
+**An empty ladder means the feature is off**: the mission dresses the character
+and this mod does not interfere. That is the state a fresh file is born in, and
+the boot line says so (`loadouts: presets=1 rungs=0 ...`).
 
 ## Requirements
 
