@@ -96,7 +96,16 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
         st.Color       = OZ_Factions.ColorARGB(slug);
         st.MyRank      = OZ_RoleNames.Of(OZ_Roles.RankOf(uid));
         // Лідерські кнопки -- лише тому, чиє лідерство міст і перевірятиме.
-        st.MeLeader    = mine && OZ_Roles.IsLeader(acting);
+        //
+        // ДВА РЯДКИ, А НЕ `mine && OZ_Roles.IsLeader(acting)`, і це не стиль.
+        // Зміряно на стенді 2026-09-06: при `mine=true` і `IsLeader=true`
+        // (обидва надруковані в лог тим самим викликом рядком нижче) поле
+        // діставало FALSE. Логічне «і» з локальним bool ліворуч і статичним
+        // викликом праворуч, присвоєне ПОЛЮ об'єкта, дає не той результат;
+        // окремий `if` дає правильний.
+        st.MeLeader = false;
+        if (mine)
+            st.MeLeader = OZ_Roles.IsLeader(acting);
 
         // Драбина фракції -- щоб лідер міг підвищувати й знижувати, не
         // набираючи слагів: клієнт бере сусідню сходинку сам.
@@ -113,7 +122,7 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
         // сам оновлюється раз на п'ять секунд і на кожен push, це коштувало
         // O(склад * присутні). Присутніх ми тут і так перебираємо -- лишається
         // запам'ятати їх мапою.
-        ref map<string, bool> online = new map<string, bool>();
+        map<string, bool> online = new map<string, bool>();
 
         array<Man> players = new array<Man>();
         GetGame().GetPlayers(players);

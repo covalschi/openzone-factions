@@ -714,16 +714,17 @@ class OZF_AdminSection : OZ_AdminSection
                 row.DName  = v.DName;
                 row.Traits = OZ_Roles.TraitsLine(v);
                 row.Rank   = v.Rank;
-                row.FRank  = v.FRank;
+                row.FRank  = OZ_Roles.ViewFRank(v);
                 row.Leader = OZ_Roles.ViewIsLeader(v);
             }
             else
             {
                 // Мiст про нього не казав -- питаємо власнi служби, у яких є
-                // запасний шлях через файл акаунта.
+                // запасний шлях через файл акаунта. Iменi в Discord у нього
+                // немає й бути не може: воно приїжджає рiвно тим рядком
+                // ростера, якого для цього гравця мiст не прислав.
                 row.Base   = OZ_Factions.BaseOfUid(uid);
                 row.Org    = OZ_Factions.OrgOfUid(uid);
-                row.DName  = OZ_Roles.DiscordNameOf(uid);
                 row.Traits = OZ_Roles.TraitsLineOf(uid);
                 row.Rank   = OZ_Roles.RankOf(uid);
                 row.FRank  = OZ_Roles.FRankOf(uid);
