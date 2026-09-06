@@ -19,6 +19,14 @@ modded class MissionGameplay
 
         OZ_PdaPageFactory.Add(OZFP_Const.PAGE_FACTION, OZ_PdaPageFaction);
         OZ_PdaPageFactory.Letter(OZFP_Const.PAGE_FACTION, "F");
+
+        // ЗНАЧОК ВКЛАДКИ -- НАШ. Атлас КПК несе "tab_faction" від задачі 23,
+        // але реєстр спрайтів засівається лише сімома вбудованими сторінками:
+        // чужа сторінка, яка покликала саме Letter(), діставала запасний
+        // "tab_page" -- ту саму піктограму, що й безіменна сторінка. Один
+        // рядок, і на рейці стоїть фракційний значок.
+        OZ_PdaPageFactory.Sprite(OZFP_Const.PAGE_FACTION, "tab_faction");
+
         OZ_PdaPageFactory.Pair(OZ_PdaConst.PAGE_CONTACTS, OZFP_Const.PAGE_FACTION);
     }
 }

@@ -52,9 +52,22 @@ class OZF_Settings : OZ_ConfigBase
 
     private static ref OZF_Settings s_Inst;
 
+    // ЧИ МОЖНА ПИСАТИ ПОВЕРХ ФАЙЛА. Відповідь дає сам загрузчик, і мовчазне
+    // «так» коштувало б адмінського файла: `false` означає «на диску лежить
+    // єдиний примірник, якого ми не зрозуміли і не змогли винести в карантин».
+    // Успадкування нижче саме тоді й хоче писати -- і не мусить.
+    //
+    // Той самий взірець, що в ядрі (OZ_Settings.Writable, OZ_Spawns.s_Writable).
+    private static bool s_Writable = true;
+
     static OZF_Settings Get()
     {
         return s_Inst;
+    }
+
+    static bool Writable()
+    {
+        return s_Writable;
     }
 
     override int LatestVersion()
@@ -102,7 +115,7 @@ class OZF_Settings : OZ_ConfigBase
         bool first = !FileExist(OZF_Const.SETTINGS);
 
         s_Inst = new OZF_Settings();
-        OZ_ConfigLoader<OZF_Settings>.Load(OZF_Const.SETTINGS, "Factions settings", s_Inst);
+        s_Writable = OZ_ConfigLoader<OZF_Settings>.Load(OZF_Const.SETTINGS, "Factions settings", s_Inst);
 
         if (first)
             Inherit();
@@ -194,11 +207,20 @@ class OZF_Settings : OZ_ConfigBase
 
         int warnings;
         s_Inst.Validate(warnings);
-        OZ_ConfigLoader<OZF_Settings>.Save(OZF_Const.SETTINGS, "Factions settings", s_Inst);
+
+        // ПИШЕМО, ЛИШЕ ЯКЩО ЗАГРУЗЧИК ДОЗВОЛИВ. Число в пам'яті стоїть у
+        // будь-якому разі -- цей запуск працює з успадкованим строком, -- але
+        // класти його поверх файла, якого ми не прочитали, не можна: там міг
+        // лежати єдиний примірник чужої правки.
+        if (s_Writable)
+            OZ_ConfigLoader<OZF_Settings>.Save(OZF_Const.SETTINGS, "Factions settings", s_Inst);
 
         string line = "factions settings: inherited Faction.InviteTtlSeconds=";
         line += s_Inst.Faction.InviteTtlSeconds.ToString();
-        line += " from the core config - edit it in OZ_Factions_Settings.json from now on";
+        if (s_Writable)
+            line += " from the core config - edit it in OZ_Factions_Settings.json from now on";
+        else
+            line += " from the core config - NOT written: the settings file could not be read and is left untouched";
         OZ_Log.Info(line);
     }
 

@@ -225,14 +225,14 @@ class OZ_PlayerWipe
             d.FriendReq.Clear();
         if (d.NpcContacts)
             d.NpcContacts.Clear();
-        if (d.Chats)
-            d.Chats.Clear();
-        if (d.TransponderTo)
-            d.TransponderTo.Clear();
 
-        d.TransponderMode = "off";
-        d.PresenceHidden  = false;
-        // Нові поля ТЗ-4 §A теж скидаються пермадесом (R-A1.3, R-A3): нове
+        // СПАДКОВИХ ПОЛІВ ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06). Chats, TransponderTo,
+        // TransponderMode і PresenceHidden ядро тримало лише заради цього
+        // прибирання: жоден екран їх не читає, а два з них має заміну нижче
+        // (TransponderSet, HiddenFrom*). Поки ми їх чіпали, ядро не могло їх
+        // прибрати -- імені, якого немає, Enforce не пробачає.
+        //
+        // Нові поля ТЗ-4 §A скидаються пермадесом (R-A1.3, R-A3): нове
         // життя не успадковує ані мовчання, ані маячка старого.
         if (d.TransponderSet)
             d.TransponderSet.Clear();
@@ -251,9 +251,12 @@ class OZ_PlayerWipe
 
         OZ_PlayerStore.Flush(uid);
 
-        // Точки спавну: одноразова й особиста. ClearPersonal чесно скаже
-        // «не було» -- нам однаково, головне, що пiсля вайпу її немає.
-        OZ_Spawns.ClearNextSpawn(uid);
+        // Точка спавну ОСОБИСТА. ClearPersonal чесно скаже «не було» -- нам
+        // однаково, головне, що пiсля вайпу її немає.
+        //
+        // Одноразової точки бiльше не буває: механiзм пiшов iз ядра
+        // 2026-09-06 за вiдсутнiстю продюсера в усiй серiї, i виклик
+        // ClearNextSpawn скасовував те, чого нiхто не ставив.
         OZ_Spawns.ClearPersonal(uid);
 
         // ЧУЖІ ЗАПИСНИКИ НЕ ЧІПАЄМО, і це рішення власника 2026-08-30.

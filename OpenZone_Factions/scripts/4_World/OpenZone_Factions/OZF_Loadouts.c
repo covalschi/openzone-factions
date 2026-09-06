@@ -8,7 +8,7 @@
 //   Ladder    -- щаблі: Faction + Rank -> Preset. Rank порожній -- на всю
 //                фракцію; для угруповання Rank -- слаг внутрішнього звання
 //                (FRank), для базової фракції -- слаг сталкерського (Rank).
-//   Modifiers -- за фракцією список OZ_LoadoutMod (Key -- слаг посади чи
+//   Modifiers -- за фракцією список OZF_LoadoutMod (Key -- слаг посади чи
 //                мітки; Replace за слотом, Add у контейнер), у порядку
 //                оголошення (R4.3-R4.4).
 //
@@ -23,14 +23,36 @@ class OZF_LoadoutRung
     string Preset  = "";
 }
 
+// Модифікатор -- за посадою чи міткою (R4.2). Replace -- за слотом, останній
+// у порядку конфігу виграє; Add -- накопичується.
+//
+// ЖИВЕ ТУТ, А НЕ В ЯДРІ (2026-09-06). Клас оголошувало ядро, хоч його ключ --
+// слаг посади чи мітки, і звіряється він з OZ_Roles.HasPost/HasTrait, тобто зі
+// словником, якого ядро не знає. Єдиний споживач був і лишається один -- цей
+// файл. Форма ПОЛІВ не змінилась ані на байт, тож
+// $profile:OpenZone\OZ_Factions_Loadouts.json читається як раніше: у JSON
+// їдуть імена полів, а не імена класів.
+class OZF_LoadoutMod
+{
+    string Key = "";
+    ref array<ref OZ_LoadoutItem> Replace;
+    ref array<ref OZ_LoadoutItem> Add;
+
+    void OZF_LoadoutMod()
+    {
+        Replace = new array<ref OZ_LoadoutItem>();
+        Add     = new array<ref OZ_LoadoutItem>();
+    }
+}
+
 class OZF_LoadoutFactionMods
 {
     string Faction = "";
-    ref array<ref OZ_LoadoutMod> Mods;
+    ref array<ref OZF_LoadoutMod> Mods;
 
     void OZF_LoadoutFactionMods()
     {
-        Mods = new array<ref OZ_LoadoutMod>();
+        Mods = new array<ref OZF_LoadoutMod>();
     }
 }
 
@@ -140,10 +162,10 @@ class OZF_LoadoutsConfig : OZ_ConfigBase
             if (!fm)
                 continue;
             if (!fm.Mods)
-                fm.Mods = new array<ref OZ_LoadoutMod>();
+                fm.Mods = new array<ref OZF_LoadoutMod>();
             for (int k = 0; k < fm.Mods.Count(); k++)
             {
-                OZ_LoadoutMod mod = fm.Mods[k];
+                OZF_LoadoutMod mod = fm.Mods[k];
                 if (!mod)
                     continue;
                 if (!mod.Replace)
@@ -251,7 +273,7 @@ class OZF_Loadouts
         return false;
     }
 
-    static array<ref OZ_LoadoutMod> ModsOf(string faction)
+    static array<ref OZF_LoadoutMod> ModsOf(string faction)
     {
         if (!s_Cfg || !s_Cfg.Modifiers || faction == "")
             return null;
@@ -379,14 +401,14 @@ class OZF_LoadoutService : OZ_LoadoutService
             ApplyMods(uid, OZF_Loadouts.ModsOf(org));
     }
 
-    private void ApplyMods(string uid, array<ref OZ_LoadoutMod> mods)
+    private void ApplyMods(string uid, array<ref OZF_LoadoutMod> mods)
     {
         if (!mods)
             return;
 
         for (int m = 0; m < mods.Count(); m++)
         {
-            OZ_LoadoutMod mod = mods[m];
+            OZF_LoadoutMod mod = mods[m];
             if (!mod || mod.Key == "")
                 continue;
             if (!OZ_Roles.HasPost(uid, mod.Key) && !OZ_Roles.HasTrait(uid, mod.Key))

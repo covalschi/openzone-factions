@@ -286,19 +286,15 @@ class OZF_Identity : OZ_IdentityService
 
     private static bool s_WarnedNoBase = false;
 
-    override string FactionShort(string id)
-    {
-        return OZ_Factions.ShortOf(id);
-    }
-
+    // FactionShort І FactionCount ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06). Обидва
+    // перекривали контракт ядра, якого не питав НІХТО в усій серії, і поки
+    // перекриття стояли, ядро не могло прибрати їх зі свого OZ_IdentityService:
+    // Enforce не пробачає override методу, якого в базі вже немає. Коротка
+    // позначка лишається доступною тим, хто залежить від цього мода явно
+    // (OZ_Factions.ShortOf), а лічильник фракцій -- OZ_Factions.Count().
     override int FactionColor(string id, int alpha)
     {
         return OZ_Factions.ColorARGB(id, alpha);
-    }
-
-    override int FactionCount()
-    {
-        return OZ_Factions.Count();
     }
 
     override void FactionIds(out array<string> outIds)
