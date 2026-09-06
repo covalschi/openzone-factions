@@ -32,18 +32,19 @@ class OZ_RoleView
     ref array<string> Posts;
     ref array<string> Traits;
 
-    // Два УГРУПОВАННЯ разом -- це помилка налаштування гільдії, а не стан
-    // гравця. Міст відмовляється вгадувати й перелічує обидва; ми лишаємо
-    // Org порожнім і даємо адмінові побачити, що він накоїв. Base при цьому
-    // заповнена як звичайно: конфлікт угруповань не робить людину не
-    // сталкером (ТЗ-1 R1.5).
-    ref array<string> Conflict;
+    // ПОЛЯ Conflict ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06).
+    //
+    // Воно везло «в цієї людини дві фракційні ролі одразу» -- стан, який міст
+    // не вміє прислати й не пришле: у нього один рядок на людину й одне поле
+    // org, і viewOf() віддає `Conflict: []` завжди, «for the game's sake»
+    // (openzone-bridge/src/roles.js:627-648). Попередження про дві фракції не
+    // спрацювало жодного разу й спрацювати не могло. Зайвий ключ у конверті
+    // JsonFileLoader мовчки пропускає, тож міст може прибрати його окремо.
 
     void OZ_RoleView()
     {
         Posts    = new array<string>();
         Traits   = new array<string>();
-        Conflict = new array<string>();
     }
 }
 
@@ -66,17 +67,18 @@ class OZ_Roles
 {
     private static ref map<string, ref OZ_RoleView> s_By;
 
-    private static ref map<string, string> s_DName;
-
     // Видиме iм'я Discord з останньої проекцiї; порожньо, коли не знаємо.
+    //
+    // ДРУГОЇ МАПИ ПІД ЦЕ НЕМАЄ (2026-09-06). Була s_DName -- uid -> ім'я, --
+    // хоч те саме ім'я вже лежить полем у кешованій проекції. Гірше: Forget()
+    // прибирав проекцію й не прибирав ім'я, тож мапа росла кожним uid, який
+    // хоч раз проектували, і не спадала ніколи.
     static string DiscordNameOf(string uid)
     {
-        if (!s_DName)
+        OZ_RoleView v = Of(uid);
+        if (!v)
             return "";
-        string n;
-        if (!s_DName.Find(uid, n))
-            return "";
-        return n;
+        return v.DName;
     }
 
     static void Apply(OZ_RoleView v)
@@ -87,13 +89,6 @@ class OZ_Roles
             return;
         if (v.Uid == "")
             return;
-
-        if (v.DName != "")
-        {
-            if (!s_DName)
-                s_DName = new map<string, string>();
-            s_DName.Set(v.Uid, v.DName);
-        }
 
         if (!s_By)
             s_By = new map<string, ref OZ_RoleView>();
@@ -132,17 +127,24 @@ class OZ_Roles
 
         if (changed)
         {
-            Remember(v);
-            OZ_RoleNotify.On().Invoke(v.Uid);
-        }
+            // ЗНІМОК -- ТІЛЬКИ ПРО ТОГО, ХТО В ЗОНІ (2026-09-06).
+            //
+            // Проекція приїжджає й на ВІДСУТНІХ: КПК, який хтось носить у
+            // кишені, додає до опиту сесійний uid свого хазяїна
+            // (OZ_PdaUidProvider), і міст чесно відповідає про нього. Remember
+            // на таку проекцію читав файл хазяїна з диска, брудив його й
+            // лишав у кеші сховища до кінця запуску -- за одного носія чужого
+            // приладу. А сам знімок для цього не потрібен: Seen* існують, щоб
+            // показати ОСТАННЄ ВІДОМЕ про того, кого зараз немає, і пишуться
+            // вони, поки людина в Зоні.
+            //
+            // Кеш проекцій (s_By) при цьому лишається: саме на ньому тримається
+            // доктрина «акаунт називає пристрій» -- без нього чужий КПК не
+            // показав би фракції свого хазяїна взагалі.
+            if (OZ_Link.Online(v.Uid))
+                Remember(v);
 
-        if (v.Conflict.Count() > 1)
-        {
-            string w = "roles: " + v.Uid;
-            w += " holds more than one faction role (";
-            w += v.Conflict[0] + ", " + v.Conflict[1];
-            w += ") - showing none until the guild is fixed";
-            OZ_Log.Warn(w);
+            OZ_RoleNotify.On().Invoke(v.Uid);
         }
     }
 
@@ -616,13 +618,6 @@ class OZ_RoleNames
         }
 
         return slug;
-    }
-
-    static int Count()
-    {
-        if (!s_By)
-            return 0;
-        return s_By.Count();
     }
 
     // Does the registry know this slug at all. The admin console asks it
