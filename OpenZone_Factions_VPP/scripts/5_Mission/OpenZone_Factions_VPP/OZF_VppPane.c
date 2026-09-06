@@ -39,16 +39,12 @@ modded class OZ_VppAdminMenu
         protected string m_FacArmedSlug  = "";
 
         // Ростер цiлком: картцi гравця треба все, а не лише iм'я з uid-ом.
-        protected ref array<string> m_RosterNames;
-        protected ref array<string> m_RosterUids;
-        protected ref array<string> m_RosterDNames;
-        protected ref array<string> m_RosterOrgs;
-        protected ref array<string> m_RosterBases;
-        protected ref array<string> m_RosterRanks;
-        protected ref array<string> m_RosterFRanks;
-        protected ref array<string> m_RosterTraits;
-        protected ref array<bool>   m_RosterLeads;
-        protected ref array<bool>   m_RosterOnline;
+        //
+        // РЯДКАМИ, А НЕ ДЕСЯТЬМА ПАРАЛЕЛЬНИМИ МАСИВАМИ (2026-09-06). Конверт
+        // приїжджає рядками; десять масивів були ручним розбиранням рядка на
+        // стовпчики, після якого кожне звертання мусило пам'ятати, що індекс
+        // у всіх десяти той самий. Тепер тримаємо те, що приїхало.
+        protected ref array<ref OZ_AdminRosterRow> m_Rows;
         protected int m_RosterPicked = -1;
 
         // Каталоги з реєстру бота, i що зараз пiд курсором циклерiв. FRanks --
@@ -77,16 +73,7 @@ modded class OZ_VppAdminMenu
         m_FacLabels  = new array<string>();
         m_FacLimits  = new array<int>();
         m_FacLeaders = new array<bool>();
-        m_RosterNames    = new array<string>();
-        m_RosterUids     = new array<string>();
-        m_RosterDNames   = new array<string>();
-        m_RosterOrgs  = new array<string>();
-        m_RosterBases = new array<string>();
-        m_RosterRanks    = new array<string>();
-        m_RosterFRanks   = new array<string>();
-        m_RosterTraits   = new array<string>();
-        m_RosterLeads    = new array<bool>();
-        m_RosterOnline   = new array<bool>();
+        m_Rows    = new array<ref OZ_AdminRosterRow>();
         m_Traits  = new array<string>();
         m_Ranks   = new array<string>();
         m_FRanks  = new array<string>();
@@ -110,6 +97,10 @@ modded class OZ_VppAdminMenu
     {
         OZ_ClientState.AdminWatch().Remove(this.OnFactionResponse);
         OZ_Notice.OnAnswer.Remove(this.OnRoleAnswer);
+
+        // Відкладені перепити теж знімаємо: до п'яти CallLater на 9,5 с
+        // лишались у черзі після закриття вікна й стріляли по знищеному меню.
+        GetGame().GetCallQueue(CALL_CATEGORY_GUI).Remove(this.AskRoster);
     }
 
     override void OnPaneShown(string id)
@@ -150,10 +141,7 @@ modded class OZ_VppAdminMenu
                 {
                     m_FacSaveArmed = false;
                     Hint("faction saved at the bot - the roster follows within seconds");
-                    // Реєстр приїде з наступним опитуванням моста (до 8 с), а
-                    // ростер панелi будується з нього -- перепитуємо двiчi.
-                    GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(this.AskRoster, 2500, false);
-                    GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(this.AskRoster, 9500, false);
+                    RefreshSoon();
                     return;
                 }
 
@@ -163,8 +151,7 @@ modded class OZ_VppAdminMenu
                     m_FacPicked = -1;
                     ClearFacForm();
                     Hint("faction removed at the bot - its members are plain stalkers again");
-                    GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(this.AskRoster, 2500, false);
-                    GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(this.AskRoster, 9500, false);
+                    RefreshSoon();
                     return;
                 }
 
@@ -181,8 +168,7 @@ modded class OZ_VppAdminMenu
                 {
                     m_WipeArmed = false;
                     Hint("wiped: the character starts over as a novice stalker");
-                    // Ролi їдуть через Discord -- ростер оновлюємо з запасом.
-                    GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(this.AskRoster, 2500, false);
+                    RefreshSoon();
                     return;
                 }
     }
@@ -207,8 +193,23 @@ modded class OZ_VppAdminMenu
 
             // Ролi їдуть через Discord: перепитуємо ростер трохи згодом, i ще
             // раз пiзнiше -- проекцiя вертається не миттєво.
-            GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(this.AskRoster, 1500, false);
-            GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(this.AskRoster, 6000, false);
+            RefreshSoon();
+        }
+
+    // ПЕРЕПИТАТИ РОСТЕР ПІСЛЯ ДІЇ -- і рівно двічі, хоч би скільки дій
+        // натиснули поспіль.
+        //
+        // Пара CallLater була вписана в чотирьох місцях, і жодне з них не
+        // знімало попередню: десяток кліків підряд ставив у чергу два десятки
+        // однакових запитів ростера, кожен -- дзвінок до моста. Remove перед
+        // постановкою лишає в черзі рівно два, від ОСТАННЬОЇ дії. Пізній
+        // потрібен: реєстр приїжджає наступним опитом моста, до восьми секунд.
+        protected void RefreshSoon()
+        {
+            ScriptCallQueue q = GetGame().GetCallQueue(CALL_CATEGORY_GUI);
+            q.Remove(this.AskRoster);
+            q.CallLater(this.AskRoster, 2500, false);
+            q.CallLater(this.AskRoster, 9500, false);
         }
 
     protected void AskRoster()
@@ -300,45 +301,36 @@ modded class OZ_VppAdminMenu
             // операцiї, i губити вiд цього видiлення -- значить клацати гравця
             // заново пiсля кожної кнопки.
             string keepUid = "";
-            if (m_RosterPicked >= 0 && m_RosterPicked < m_RosterUids.Count())
-                keepUid = m_RosterUids[m_RosterPicked];
+            if (m_RosterPicked >= 0 && m_RosterPicked < m_Rows.Count())
+                keepUid = m_Rows[m_RosterPicked].Uid;
 
-            m_RosterNames.Clear();
-            m_RosterUids.Clear();
-            m_RosterDNames.Clear();
-            m_RosterOrgs.Clear();
-            m_RosterBases.Clear();
-            m_RosterRanks.Clear();
-            m_RosterFRanks.Clear();
-            m_RosterTraits.Clear();
-            m_RosterLeads.Clear();
-            m_RosterOnline.Clear();
+            m_Rows = r.Rows;
+            if (!m_Rows)
+                m_Rows = new array<ref OZ_AdminRosterRow>();
             m_RosterPicked = -1;
             m_WipeArmed = false;
 
-            for (int i = 0; i < r.Rows.Count(); i++)
+            if (keepUid != "")
             {
-                OZ_AdminRosterRow row = r.Rows[i];
-
-                m_RosterNames.Insert(row.Name);
-                m_RosterUids.Insert(row.Uid);
-                m_RosterDNames.Insert(row.DName);
-                m_RosterOrgs.Insert(row.Org);
-                m_RosterBases.Insert(row.Base);
-                m_RosterRanks.Insert(row.Rank);
-                m_RosterFRanks.Insert(row.FRank);
-                m_RosterTraits.Insert(row.Traits);
-                m_RosterLeads.Insert(row.Leader);
-                m_RosterOnline.Insert(row.Online);
-
-                if (keepUid != "" && row.Uid == keepUid)
-                    m_RosterPicked = i;
+                for (int i = 0; i < m_Rows.Count(); i++)
+                {
+                    if (m_Rows[i] && m_Rows[i].Uid == keepUid)
+                    {
+                        m_RosterPicked = i;
+                        break;
+                    }
+                }
             }
 
             RepaintRoster();
             m_Repaint = false;
             FillPlayerCard();
             PaintFRankCycler();
+
+            // ЧОМУ СПИСОК НЕПОВНИЙ -- останнім словом, поверх «збережено».
+            // Мовчазне усічення читалось як повний ростер.
+            if (r.Partial != "")
+                Hint(r.Partial);
         }
 
     // Список гравцiв: компактний рядок, видiлений позначено стрiлкою --
@@ -351,31 +343,35 @@ modded class OZ_VppAdminMenu
 
             lb.ClearItems();
 
-            for (int i = 0; i < m_RosterNames.Count(); i++)
+            for (int i = 0; i < m_Rows.Count(); i++)
             {
+                OZ_AdminRosterRow row = m_Rows[i];
+                if (!row)
+                    continue;
+
                 string line = "";
                 if (i == m_RosterPicked)
                     line = "> ";
 
-                line += m_RosterNames[i];
+                line += row.Name;
                 // Вiдсутнi теж у списку (ТЗ-4 R-C4.2) -- i позначенi: їх можна
                 // вайпнути чи призначити, але не покликати до слова.
-                if (!m_RosterOnline[i])
+                if (!row.Online)
                     line += " (offline)";
 
                 // УГРУПОВАННЯ, а коли його немає -- базова в дужках. Без
                 // другої половини одинак і той, хто не заходив жодного разу,
                 // виглядали б однаково порожньо, а це різні люди: у першого
                 // є звання й трейти, у другого немає нічого.
-                if (m_RosterOrgs[i] != "")
+                if (row.Org != "")
                 {
-                    line += "  --  " + m_RosterOrgs[i];
-                    if (m_RosterLeads[i])
+                    line += "  --  " + row.Org;
+                    if (row.Leader)
                         line += " [L]";
                 }
-                else if (m_RosterBases[i] != "")
+                else if (row.Base != "")
                 {
-                    line += "  --  (" + m_RosterBases[i] + ")";
+                    line += "  --  (" + row.Base + ")";
                 }
 
                 lb.AddItem(line, NULL, 0);
@@ -395,7 +391,7 @@ modded class OZ_VppAdminMenu
             TextWidget rankT    = TextWidget.Cast(M_SUB_WIDGET.FindAnyWidget("InfoRank"));
             TextWidget traitsT  = TextWidget.Cast(M_SUB_WIDGET.FindAnyWidget("InfoTraits"));
 
-            if (m_RosterPicked < 0 || m_RosterPicked >= m_RosterNames.Count())
+            if (m_RosterPicked < 0 || m_RosterPicked >= m_Rows.Count() || !m_Rows[m_RosterPicked])
             {
                 if (nameT)
                     nameT.SetText("pick a player in the roster below");
@@ -412,26 +408,26 @@ modded class OZ_VppAdminMenu
                 return;
             }
 
-            int i = m_RosterPicked;
+            OZ_AdminRosterRow row = m_Rows[m_RosterPicked];
 
             if (nameT)
             {
-                string shown = m_RosterNames[i];
-                if (!m_RosterOnline[i])
+                string shown = row.Name;
+                if (!row.Online)
                     shown += "  (offline)";
                 nameT.SetText(shown);
             }
 
             if (discordT)
             {
-                string dn = m_RosterDNames[i];
+                string dn = row.DName;
                 if (dn == "")
                     dn = "-";
                 discordT.SetText(dn);
             }
 
             if (steamT)
-                steamT.SetText(m_RosterUids[i]);
+                steamT.SetText(row.Uid);
 
             if (facT)
             {
@@ -439,16 +435,16 @@ modded class OZ_VppAdminMenu
                 // угруповання зі званням і лідерством. Тире там, де осі
                 // немає, -- порожнє місце й «нема угруповання» читаються
                 // однаково, а це різні відповіді.
-                string fac = m_RosterBases[i];
+                string fac = row.Base;
                 if (fac == "")
                     fac = "-";
 
-                if (m_RosterOrgs[i] != "")
+                if (row.Org != "")
                 {
-                    fac += "  /  " + m_RosterOrgs[i];
-                    if (m_RosterFRanks[i] != "")
-                        fac += "  ^" + m_RosterFRanks[i];
-                    if (m_RosterLeads[i])
+                    fac += "  /  " + row.Org;
+                    if (row.FRank != "")
+                        fac += "  ^" + row.FRank;
+                    if (row.Leader)
                         fac += "  [leader]";
                 }
                 facT.SetText(fac);
@@ -456,7 +452,7 @@ modded class OZ_VppAdminMenu
 
             if (rankT)
             {
-                string rk = m_RosterRanks[i];
+                string rk = row.Rank;
                 if (rk == "")
                     rk = "-";
                 rankT.SetText(rk);
@@ -464,7 +460,7 @@ modded class OZ_VppAdminMenu
 
             if (traitsT)
             {
-                string tr = m_RosterTraits[i];
+                string tr = row.Traits;
                 if (tr == "")
                     tr = "-";
                 traitsT.SetText(tr);
@@ -569,9 +565,9 @@ modded class OZ_VppAdminMenu
         // проблемою.
         protected string PickedPlayer()
         {
-            if (m_RosterPicked < 0 || m_RosterPicked >= m_RosterUids.Count())
+            if (m_RosterPicked < 0 || m_RosterPicked >= m_Rows.Count() || !m_Rows[m_RosterPicked])
                 return "";
-            return m_RosterUids[m_RosterPicked];
+            return m_Rows[m_RosterPicked].Uid;
         }
 
     protected void PaintTraitCycler()
@@ -606,12 +602,12 @@ modded class OZ_VppAdminMenu
         // гравець не вибраний, поза угрупованням, або звань там не завели.
         protected void FRankOptions(array<string> outBare)
         {
-            if (m_RosterPicked < 0 || m_RosterPicked >= m_RosterOrgs.Count())
+            if (m_RosterPicked < 0 || m_RosterPicked >= m_Rows.Count() || !m_Rows[m_RosterPicked])
                 return;
 
             // Драбина належить УГРУПОВАННЮ: у базової фракції внутрішніх
             // звань немає й бути не може -- вона в усіх однакова.
-            string prefix = m_RosterOrgs[m_RosterPicked] + ":";
+            string prefix = m_Rows[m_RosterPicked].Org + ":";
             if (prefix == ":")
                 return;
 
@@ -665,7 +661,7 @@ modded class OZ_VppAdminMenu
 
                 if (nm == "FacRoster")
                 {
-                    if (row >= 0 && row < m_RosterNames.Count())
+                    if (row >= 0 && row < m_Rows.Count())
                     {
                         m_RosterPicked = row;
                         m_WipeArmed = false;
@@ -883,7 +879,7 @@ modded class OZ_VppAdminMenu
                     {
                         m_WipeArmed = true;
                         m_WipeUid = wuid;
-                        Hint("press WIPE again to erase " + m_RosterNames[m_RosterPicked] + " forever");
+                        Hint("press WIPE again to erase " + m_Rows[m_RosterPicked].Name + " forever");
                         return true;
                     }
 
