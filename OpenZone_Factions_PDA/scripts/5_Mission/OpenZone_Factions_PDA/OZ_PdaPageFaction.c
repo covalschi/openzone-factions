@@ -254,7 +254,10 @@ class OZ_PdaPageFaction : OZ_PdaPage
     private void PaintButtons()
     {
         bool lead = m_St && m_St.MeLeader;
-        bool mine = m_St && m_St.Org != "";
+        // ЧЛЕНСТВО ТОГО, ХТО ТИСНЕ, а не фракція приладу: `m_St.Org != ""`
+        // означало «у цього КПК є фракція», і носій чужого приладу діставав
+        // кнопку «покинути» чужого угруповання. Сервер каже це одним полем.
+        bool member = m_St && m_St.MeMember;
 
         // Один пошук замість двох: PickedMember() уже перебирає склад, і
         // окремий PickedIsMe() робив той самий прохід удруге.
@@ -282,7 +285,7 @@ class OZ_PdaPageFaction : OZ_PdaPage
         // Піти можна завжди, поки є звідки. Лідер теж: посада перейде
         // наступному сама.
         if (m_BtnLeave)
-            m_BtnLeave.Show(mine);
+            m_BtnLeave.Show(member);
     }
 
     // Сусідня сходинка драбини для обраного. `up` -- вгору, інакше вниз.

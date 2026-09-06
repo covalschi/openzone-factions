@@ -94,7 +94,26 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
 
         st.FactionName = OZ_Factions.NameOf(slug);
         st.Color       = OZ_Factions.ColorARGB(slug);
-        st.MyRank      = OZ_RoleNames.Of(OZ_Roles.RankOf(uid));
+        // ЗВАННЯ В ШАПЦІ -- ТОГО, ХТО ТИСНЕ. Сталкерське звання особисте й
+        // фракції не належить: у чужому КПК чесно стоїть звання того, хто
+        // його підняв, а не хазяїна. Порожньо, поки міст про нього мовчить.
+        st.MyRank      = OZ_RoleNames.Of(OZ_Roles.RankOf(acting));
+
+        // ЧЛЕНСТВО -- ТЕЖ ЙОГО, і саме воно вмикає «піти з фракції».
+        //
+        // Кнопка стояла на приладовій фракції (`st.Org != ""`), тобто на
+        // фракції ХАЗЯЇНА: одинак, який підняв чужий КПК, бачив «покинути
+        // Найманців» і підтвердження «втратиш звання <хазяїна>», а натиск слав
+        // faction.clear ВІД СЕБЕ -- бо кожен OZF_RoleReq виконується від імені
+        // відправника. Міст чесно чистив порожню фракцію того, хто тисне, і
+        // відповідав «Готово».
+        //
+        // Два рядки, а не `mine && ...`: складене «і», присвоєне ПОЛЮ
+        // об'єкта, дає не той результат (зміряно, див. MeLeader нижче).
+        st.MeMember = false;
+        if (mine)
+            st.MeMember = OZ_Factions.OrgOfUid(acting) != "";
+
         // Лідерські кнопки -- лише тому, чиє лідерство міст і перевірятиме.
         //
         // ДВА РЯДКИ, А НЕ `mine && OZ_Roles.IsLeader(acting)`, і це не стиль.
@@ -158,7 +177,11 @@ class OZ_PdaHandlerFaction : OZ_PageHandler
                 m.FRank = OZ_RoleNames.Of(slug + ":" + m.FRankId);
             m.Leader = OZ_Roles.IsLeader(uids[i]);
             m.Online = online.Contains(uids[i]);
-            m.Me     = uids[i] == uid;
+            // «ЦЕ Я» -- про того, хто тисне. Клієнт бере з цього рядка своє
+            // фракційне звання для попередження «що саме буде втрачено», тож
+            // на чужому КПК позначка мусить або стояти на власному рядку
+            // носія (він у тій самій фракції), або не стояти ніде.
+            m.Me     = uids[i] == acting;
             st.Members.Insert(m);
         }
 
