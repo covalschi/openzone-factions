@@ -9,7 +9,7 @@
 // Лишити її в ядрі означало б, що ядрова вкладка не збереться без мода
 // фракцій -- тобто рівно та залежність, яку ми знімали.
 //
-// Гарди: NO_GUI -- сервер компілює Mission без UI; AVPPAdminTools i
+// Гарди: NO_GUI -- сервер компілює Mission без UI; AVPPAdminTools і
 // OpenZone_VPP -- імена класів CfgMods (їх авто-дефайнить рушій).
 
 #ifdef AVPPAdminTools
@@ -28,7 +28,7 @@ modded class OZ_VppAdminMenu
         protected int m_FacPicked = -1;
 
         // Редактор фракцій (ТЗ-2 §15, R7.8): що показує форма і чи зведено
-        // курок. Обидві дії назовні -- SAVE i REMOVE -- у два натискання,
+        // курок. Обидві дії назовні -- SAVE і REMOVE -- у два натискання,
         // як і все у вкладці.
         protected ref array<string> m_FacLabels;
         protected ref array<int>    m_FacLimits;
