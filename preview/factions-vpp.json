@@ -1,10 +1,10 @@
-{"note":"FACTIONS: form and player card filled. Listboxes stay empty -- AddItem is beyond a fixture. Every op carries nth:1. WipeNote keeps the layout's own text, so no op re-sets it. Iскра opens with a Latin I: no U+0406.","ops":[
+{"note":"FACTIONS: form and player card filled. Listboxes stay empty -- AddItem is beyond a fixture. Every op carries nth:1. WipeNote keeps the layout's own text, so no op re-sets it. Іскра opens with U+0406, the Ukrainian І: the fixture spells names the way the mod ships them.","ops":[
 {"op":"show","name":"PaneFactions","nth":1},
 {"op":"text","name":"FacSearch","text":"dolg","nth":1},
 {"op":"text","name":"FacSlug","text":"dolg","nth":1},
 {"op":"text","name":"FacLabel","text":"Долг","nth":1},
 {"op":"text","name":"FacLimit","text":"24","nth":1},
-{"op":"text","name":"InfoName","text":"Iскра","nth":1},
+{"op":"text","name":"InfoName","text":"Іскра","nth":1},
 {"op":"text","name":"InfoDiscord","text":"iskra","nth":1},
 {"op":"text","name":"InfoSteam","text":"76561198012345678","nth":1},
 {"op":"text","name":"InfoFaction","text":"одинак / Долг ^сержант [leader]","nth":1},
