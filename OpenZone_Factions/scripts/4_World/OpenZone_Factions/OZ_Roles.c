@@ -606,6 +606,25 @@ class OZ_RolesSink : OZ_BridgeSink
         // й лежить у OZ_RoleView.Copy.
         OZ_Roles.Apply(v.Copy());
     }
+
+    // Що означає перемикання дзеркала роду "roles" -- одним реченням адміну.
+    //
+    // Загальне речення ядра тут неправда в обидва боки, і саме тому воно
+    // перекрите. Дзеркало ролей не «заливає історію»: воно робить ГІЛЬДІЮ
+    // ПОХІДНОЮ від таблиць бота -- заводить бракуючі ролі, перейменовує
+    // зсунуті й ставить кожному прив'язаному рівно те, що каже його рядок.
+    // Роль, видана в Discord рукою, повертається назад наступним оновленням
+    // учасника, а не приймається.
+    //
+    // Вимкнення теж не «архів»: гільдія просто перестає бути дзеркалом, і
+    // ролі лишаються там, де їх застали, -- гра ними більше не керує, але
+    // й не знімає.
+    override string MirrorNote(string kind, bool on)
+    {
+        if (on)
+            return "the bot fills the guild from its tables first, then keeps every linked member's Discord roles equal to his row - a role handed out by hand is put back";
+        return "the guild stops following the tables; the roles people wear now stay on them, and the game neither sets nor removes any";
+    }
 }
 
 // Конверт роду "roster": як звуться фракції. Приходить лише коли реєстр
@@ -643,6 +662,20 @@ class OZ_RosterSink : OZ_BridgeSink
         OZ_Roles.RememberTraitIds(kept.Traits);
         OZ_Roles.RememberRankIds(kept.Ranks);
         OZ_Roles.RememberFRankIds(kept.FRanks);
+    }
+
+    // РОСТЕР -- НЕЙТРАЛЬНА ДОРОГА: не кешуємо, але й чужого кеша не гасимо.
+    //
+    // v1/roles/roster просить адмін, і питання це про МИТЬ («хто зараз у
+    // реєстрі бота»), а не про світ: відповідь щоразу може бути іншою, тож
+    // тримати її нема сенсу. Але й записом вона не є -- у боті після неї не
+    // змінилось нічого. Неоголошена дорога рахується записувальною, тобто
+    // кожне відкриття адмінського ростера скидало б кеш ЧАТУ Й НОВИН усьому
+    // серверу. Ім'я жило списком у самому ядрі й пішло звідти разом з іншими
+    // (задача 61); дім у нього тепер тут -- у того, хто цю дорогу кличе.
+    override void Neutral(array<string> routes)
+    {
+        routes.Insert("v1/roles/roster");
     }
 }
 
