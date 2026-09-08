@@ -1,4 +1,10 @@
-// Адмінська сторінка фракційної системи: ростер і пермадес.
+// Адмінська сторінка фракційної системи: ростер, редактор фракцій і витирач.
+//
+// ПЕРМАДЕС ЗВІДСИ ПОЇХАВ 2026-09-08 (рішення власника): служба, защіпка,
+// приймач поштовху й операція розділу тепер у ядрі (OZ_Wipe), а тут лишився
+// самий OZF_Wiper -- вісім полів, які пише цей мод. Ростер лишається: він
+// показує фракцію, угруповання, звання, риси й лідерство, збирається з
+// v1/roles/roster через OZ_RoleView, і ядро про ці типи не знає.
 //
 // ОКРЕМИЙ РОЗДІЛ, а не операції ядрового. Ядро лишає собі редактор конфігів
 // і спавни -- те, що є в нього завжди; ростер із рангами, званнями, рисами
@@ -206,276 +212,58 @@ class OZF_AckReply : OZ_BridgeReply
     }
 }
 
-class OZ_AdminWipeAsk
+// ФРАКЦІЇ СТИРАЮТЬ ТЕ, ЩО САМІ ПИШУТЬ, -- і це все, що лишилось тут від
+// пермадесу.
+//
+// ЩО ЗВІДСИ ПОЇХАЛО Й ЧОМУ. Тут жив увесь конвеєр: лист мосту, спільний
+// OZ_BridgeAck, защіпка, приймач відповіді, ігрова половина, приймач поштовху
+// й операція розділу -- сім класів і дві гілки. З них фракційними по суті
+// були ВІСІМ РЯДКІВ нижче плюс OZ_Roles.Forget; решта чистила поля, які пише
+// сам КПК (друзі, запити, NPC, транспондер, обидва вимикачі скритності), або
+// була ядровою взагалі. Наслідок був не косметичний: сервер core+PDA БЕЗ
+// цього мода лишався без вайпу цілком -- ані кнопки, ані операції, ані
+// підписки на рід "wipe", тобто команда бота стирала ролі в Discord, а КПК
+// небіжчика працювали далі. Служба переїхала в ядро (OZ_Wipe), рішення
+// власника 2026-09-08.
+//
+// ІДЕМПОТЕНТНИЙ І САМОДОСТАТНІЙ (договір OZ_Wiper): повтор нічого не міняє,
+// на сусіда не спирається -- порядок витирачів ядро не обіцяє.
+//
+// МОСТА ЗВІДСИ НЕ КЛИЧЕМО. Передача основ угруповань і скидання ролей до
+// новачка -- половина БОТА (wipePlayer, roles.wipe), і вона вже сталась до
+// миті, коли ядро почало ігрову половину: гру чіпає лише `ack.Ok`.
+class OZF_Wiper : OZ_Wiper
 {
-    string Uid = "";
-
-    // «Ігрову половину вже зроблено». Ставить ГРА, коли пермадес почався в
-    // ній: тоді міст робить лише своє й не шле поштовх назад. Порожнє (з
-    // команди бота) означає протилежне -- міст мусить розбудити гру.
-    bool FromGame = false;
-}
-
-// Відповідь моста на команду: вдалося чи ні, і чому.
-class OZ_BridgeAck
-{
-    bool   Ok  = false;
-    string Why = "";
-}
-
-// ЧИЙ ВАЙП УЖЕ В ДОРОЗІ.
-//
-// Пермадес не ідемпотентний, і саме тому подвійне натискання коштує дорого:
-// обидва листи доїжджають до `ack.Ok`, обидві відповіді кличуть
-// OZ_PlayerWipe.Local, і покоління стрибає через два -- а Freeze між ними
-// записує друге, вже порожнє життя окремим файлом могили. Консоль тримає
-// підтвердження (WIPE двічі), але воно захищає від випадкового кліку, а не
-// від другого кліку по озброєній кнопці, поки міст думає над першим.
-//
-// Ключ -- ЦІЛЬ, а не адмін: два адміни на одного небіжчика -- та сама шкода.
-// Знімається в OZ_AdminWipeReply обома дорогами, і третьої в нього немає:
-// мовчання рушія приходить в OnQuiet, а той за замовчуванням кличе OnFail.
-class OZ_WipeInFlight
-{
-    private static ref map<string, bool> s_By = new map<string, bool>();
-
-    static bool Busy(string uid)
+    override string Name()
     {
-        return s_By.Contains(uid);
+        return "OZF_Wiper";
     }
 
-    static void Begin(string uid)
+    override void Wipe(string uid)
     {
-        s_By.Set(uid, true);
-    }
-
-    static void Done(string uid)
-    {
-        if (s_By.Contains(uid))
-            s_By.Remove(uid);
-    }
-}
-
-// Міст відповів на вайп -- ТУТ І ВІДБУВАЄТЬСЯ ІГРОВА ПОЛОВИНА.
-//
-// Порядок перевернуто 2026-09-06, і це не косметика. Гра робила своє
-// ПЕРШОЮ -- заморожувала покоління, запечатувала КПК, стирала друзів, -- а
-// потім питала міст. Відмова Discord (бот не може керувати роллю, тред не
-// віддається, гільдія недоступна) лишала гравця розполовиненим: у Зоні мертвий,
-// у Discord живий. Порада «повтори команду» не рятувала: повтор заморожував ЩЕ
-// ОДНЕ, уже порожнє покоління, і кожна спроба додавала небіжчику життя.
-//
-// Тепер гру чіпає лише `ack.Ok`. Мовчання моста -- OnFail -- не чіпає нічого
-// взагалі, а нерозбірлива відповідь так само нічого: половину вайпу неможливо
-// відрізнити від бага, а «не сталося нічого» адмін бачить і повторює безпечно.
-//
-// FromGame у листі лишається true: бот не мусить штовхати нам "wipe" назад --
-// свою половину ми зробимо самі, з цієї відповіді.
-class OZ_AdminWipeReply : OZ_BridgeReply
-{
-    protected string m_AdminUid;
-    protected string m_Op;
-    protected string m_Uid;
-
-    void OZ_AdminWipeReply(string adminUid, string op, string uid)
-    {
-        m_AdminUid = adminUid;
-        m_Op       = op;
-        m_Uid      = uid;
-    }
-
-    override void OnBody(string json)
-    {
-        OZ_WipeInFlight.Done(m_Uid);
-
-        PlayerIdentity to = OZ_Link.Online(m_AdminUid);
-
-        OZ_BridgeAck ack = new OZ_BridgeAck();
-        string err;
-        if (!JsonFileLoader<OZ_BridgeAck>.LoadData(json, ack, err) || !ack)
-        {
-            OZ_Log.Warn("admin: unreadable answer to the wipe of " + m_Uid + ": " + err + " - nothing was changed in the game");
-            if (to)
-                OZ_Rpc.AdminRespond(to, OZF_Const.SECTION, m_Op, false, "", "STR_OZ_ERR_INTERNAL");
-            return;
-        }
-
-        if (!ack.Ok)
-        {
-            OZ_Log.Warn("admin: bridge refused the wipe: " + ack.Why + " - nothing was changed in the game");
-            if (to)
-                OZ_Rpc.AdminRespond(to, OZF_Const.SECTION, m_Op, false, "", ack.Why);
-            return;
-        }
-
-        // Адмін міг вийти, поки міст думав, -- на долю персонажа це не
-        // впливає. Спершу робимо, потім розповідаємо тому, хто ще слухає.
-        OZ_PlayerWipe.Local(m_Uid);
-
-        // ДРУГИЙ СКИД КЕШУ, І НЕ ЗАЙВИЙ. OZ_BridgeClient.Call() вище вже
-        // гасив кеш ЦІЛКОМ у мить відправлення листа -- "v1/player/wipe" це
-        // дорога запису, -- а це РАНІШЕ, ніж міст встиг стерти гравця в
-        // Discord. Читання чату, що влучило саме в цю щілину, кладе назад
-        // склад розмов ЩЕ ДО ПЕРМАДЕСУ, і той живе в кеші до TTL_MS (60 с).
-        // Тут ack.Ok каже, що вайп на мосту вже стався насправді, тож рід
-        // "wipe" безпечно застарити ще раз -- рівно те, що для конверта
-        // опиту робить Stales("chat") у OZ_WipeSink, тільки вручну: на
-        // цьому шляху (FromGame=true) конверта роду "wipe" не буде зовсім.
-        OZ_BridgeCache.Invalidate("wipe", "admin wipe ack");
-
-        if (to)
-            OZ_Rpc.AdminRespond(to, OZF_Const.SECTION, m_Op, true, "{}", "");
-    }
-
-    override void OnFail(int code)
-    {
-        OZ_WipeInFlight.Done(m_Uid);
-
-        OZ_Log.Warn("admin: the wipe of " + m_Uid + " never reached the bridge - nothing was changed in the game");
-
-        PlayerIdentity to = OZ_Link.Online(m_AdminUid);
-        if (!to)
-            return;
-        OZ_Rpc.AdminRespond(to, OZF_Const.SECTION, m_Op, false, "", "STR_OZ_ERR_NO_BRIDGE");
-    }
-}
-
-// ІГРОВА ПОЛОВИНА ПЕРМАДЕСУ, окремо від того, хто її попросив.
-//
-// Просять двоє: адмінська консоль у грі (і тоді вона ж кличе міст) і сам
-// МІСТ -- коли пермадес запустили командою бота, а не з гри. Без цього
-// класу друга дорога робила лише половину справи: ролі в Discord
-// скидались, а КПК небіжчика лишались живими, бо гра про смерть не чула.
-class OZ_PlayerWipe
-{
-    static void Local(string uid)
-    {
-        if (!GetGame().IsServer())
-            return;
-        if (uid == "")
-            return;
-
-        // СПЕРШУ ЗАМОРОЗКА, потім чистка. Старе життя лягає в окремий файл
-        // цілим -- з контактами, нотатками й усім, що в ньому було, -- і
-        // лише після цього живий запис стає новим персонажем.
-        OZ_PlayerStore.Freeze(uid);
-
         OZ_PlayerData d = OZ_PlayerStore.Load(uid);
-        d.SessionEpoch = d.SessionEpoch + 1;
+        if (!d)
+            return;
 
-        if (d.Friends)
-            d.Friends.Clear();
-        if (d.FriendReq)
-            d.FriendReq.Clear();
-        if (d.NpcContacts)
-            d.NpcContacts.Clear();
-
-        // Поля ТЗ-4 §A скидаються пермадесом (R-A1.3, R-A3): нове життя не
-        // успадковує ані мовчання, ані маячка старого.
-        if (d.TransponderSet)
-            d.TransponderSet.Clear();
-        d.HiddenFromZone     = false;
-        d.HiddenFromContacts = false;
-        d.BaseFaction     = "";
-        d.OrgFaction      = "";
-        d.SeenBase        = "";
-        d.SeenOrg         = "";
-        d.SeenRank        = "";
-        d.SeenFRank       = "";
+        // ДВІ ОСІ належності (ТЗ-1 §3 R1.3) і знімок ролей до них. Базову
+        // фракцію нове життя отримає на першому ж вході -- OZF_Identity.
+        // EnsureBase, -- а не успадкує від небіжчика.
+        d.BaseFaction = "";
+        d.OrgFaction  = "";
+        d.SeenBase    = "";
+        d.SeenOrg     = "";
+        d.SeenRank    = "";
+        d.SeenFRank   = "";
         if (d.SeenPosts)
             d.SeenPosts.Clear();
         if (d.SeenTraits)
             d.SeenTraits.Clear();
 
-        OZ_PlayerStore.Flush(uid);
-
-        // Точка спавну ОСОБИСТА. ClearPersonal чесно скаже «не було» -- нам
-        // однаково, головне, що після вайпу її немає.
-        OZ_Spawns.ClearPersonal(uid);
-
-        // І ОДНОРАЗОВА ТОЧКА -- ТЕЖ, і цей рядок повертається на місце.
-        //
-        // Тут стояв коментар «одноразової точки більше не буває: механізм
-        // пішов із ядра». Він був правдою рівно один етап: контракт
-        // SetNextSpawn/ClearNextSpawn (ТЗ-5 R-A2.1, названий заказник --
-        // дефібрилятор) у ядрі знову є, а виклик звідси зник разом із ним.
-        //
-        // Наслідок ловиться порядком подій, а не читанням: медик ставить
-        // «підняти там, де впав», людину в ті ж хвилини стирають назавжди --
-        // і нове життя, зовсім чужа людина з тим самим Steam-id, з'являється
-        // на трупі попереднього.
-        //
-        // СТРОК ТУТ НЕ РЯТУЄ, і саме тому рядок потрібен. Строк у точки є
-        // (OZ_Spawns.ONCE_TTL_MS -- п'ять хвилин), але все вікно помилки в
-        // ньому й лежить: медик ставить точку, кличе адміна, адмін стирає --
-        // це хвилини, а не години. Вайп -- єдина мить, коли ми ТОЧНО знаємо,
-        // що обіцянка «повернути тебе сюди» більше ні до кого не стосується,
-        // і чекати на строк тут нема чого.
-        //
-        // Виклик безпечний, коли точки не було: ClearNextSpawn мовчки виходить
-        // і в лог не пише -- на відміну від ClearPersonal вище, який каже.
-        OZ_Spawns.ClearNextSpawn(uid);
-
-        // ЧУЖІ ЗАПИСНИКИ НЕ ЧІПАЄМО, і це рішення власника 2026-08-30.
-        //
-        // Викреслити небіжчика з чужих контактів означало б РОЗПОВІСТИ про
-        // його смерть: рядок, який зник, читається однозначно. КПК не
-        // повідомляє про смерть -- ніколи. Запис лишається на місці
-        // замороженим, з датою останньої появи в Зоні, і чи людина загинула,
-        // чи просто не заходить, з нього не видно.
-        //
-        // Нове життя того самого акаунта -- ОКРЕМИЙ запис (uid#покоління),
-        // якого ні в кого ще немає: знайомитись доведеться наново.
+        // Запис робить ядро -- один Flush на все, що натерли всі витирачі.
+        OZ_PlayerStore.MarkDirty(uid);
 
         // Проекцію ролей забуваємо: міст пришле нову, вже новачкову.
         OZ_Roles.Forget(uid);
-
-        OZ_Log.Info("player " + uid + " wiped: generation frozen, devices sealed");
-    }
-}
-
-// Поштовх «цього гравця стерли» -- від моста. Приходить, коли пермадес
-// запустили командою бота: гра робить свою половину тут.
-class OZ_WipeSink : OZ_BridgeSink
-{
-    override void Deliver(string json)
-    {
-        OZ_AdminWipeAsk a = new OZ_AdminWipeAsk();
-        string err;
-        if (!JsonFileLoader<OZ_AdminWipeAsk>.LoadData(json, a, err) || !a)
-        {
-            OZ_Log.Warn("wipe: unreadable push from the bridge: " + err);
-            return;
-        }
-
-        OZ_PlayerWipe.Local(a.Uid);
-    }
-
-    // ВАЙП ПЕРЕПИСУЄ СКЛАД РОЗМОВ -- отже застаріває кеш чату (платформа §4).
-    //
-    // Це той рідкісний рід, який застарює ЧУЖЕ: сторінка чату оголосила свої
-    // v1/chat/list|open|older читальними, ядро тримає відповідь TTL_MS (60 с),
-    // а міст на вайпі викреслює uid з members КОЖНОЇ бесіди (openzone-bridge
-    // wipePlayer).
-    //
-    // РЯДОК ПРО ЦІНУ, А НЕ ПРО ПРАВИЛЬНІСТЬ. Без нього рід "wipe" лишався б
-    // незареєстрованим, OZ_BridgeCache.Invalidate чесно повернув би false --
-    // і викликач сам скидає кеш ЦІЛКОМ (OZ_BridgeClient.c, поруч із
-    // Invalidate у OZ_BridgeCache.c): чужого небіжчика в списку учасників це
-    // не лишає. Рядок лише дешевший: прицільні три дороги чату замість
-    // грубого Clear() усіх родів одразу.
-    //
-    // І СПРАЦЬОВУЄ ВІН ЛИШЕ КОЛИ КОНВЕРТ РОДУ "wipe" ДОЇХАВ ОПИТОМ -- вайп
-    // командою бота. З VPP-консолі (OZ_AdminWipeAsk.FromGame=true) міст
-    // конверт не шле (openzone-bridge/src/index.js: роут v1/player/wipe), і
-    // цей Stales мовчить; той шлях застаріває кеш сам, в
-    // OZ_AdminWipeReply.OnBody.
-    //
-    // Власних читальних доріг у роду немає: він тільки штовхає. Тому тут
-    // рівно одне ім'я -- чужий рід, який ми справді ламаємо.
-    override void Stales(array<string> kinds)
-    {
-        kinds.Insert("chat");
     }
 }
 
@@ -575,10 +363,9 @@ class OZF_AdminSection : OZ_AdminSection
         if (op == "roster")
             return Roster(op, sender, ok, error);
 
-        // Пермадес. Ім'я живе в операції з тієї ж причини, що й у cfg_*:
-        // uid короткий, але правило одне на всі адмінські операції.
-        if (op.IndexOf("player_wipe:") == 0)
-            return PlayerWipe(op.Substring(12, op.Length() - 12), op, sender, ok, error);
+        // ПЕРМАДЕСУ ТУТ БІЛЬШЕ НЕМАЄ: операція переїхала в ядровий розділ
+        // OZ_AdminSect.PLAYERS (OZ_PlayerOp.WIPE). Кнопка WIPE лишилась у
+        // нашій панелі й адресує тепер туди -- логіка одна, кнопки дві.
 
         // The faction editor (TZ-2 section 15, R7.8): both go straight to the
         // bot's tables, and the roster comes back on the next poll.
@@ -658,68 +445,6 @@ class OZF_AdminSection : OZ_AdminSection
         OZ_Log.Info("admin: faction " + slug + " removed by " + sender.GetPlainId());
         OZ_BridgeClient.Call("v1/factions/remove", letter, new OZF_AckReply(sender.GetPlainId(), op, "removing faction " + slug));
 
-        ok    = false;
-        error = OZ_Const.DEFER;
-        return "";
-    }
-
-    // «Чистий аркуш»: персонаж помер назавжди, ГРАВЕЦЬ лишається.
-    //
-    // Ігрова половина -- тут і одразу: епоха сесій +1 (всі його КПК
-    // замерзають назавжди -- сесію відкриває лише безхазяйний пристрій,
-    // а ці назавжди лишаються зайнятими мертвою сесією), друзі, запити,
-    // групи, транспондер, особиста точка спавну -- геть. Прив'язка Discord
-    // ЛИШАЄТЬСЯ: гравець той самий, це персонаж новий.
-    //
-    // Половина моста (вихід із приватних тредів, скидання ролей до
-    // новачка) їде викликом v1/player/wipe, і відповідь клієнтові -- ТІЛЬКИ
-    // після неї: адмін мусить знати, що вайп пройшов ЦІЛКОМ, а не наполовину.
-    //
-    // ІГРОВОЇ ПОЛОВИНИ ТУТ БІЛЬШЕ НЕМАЄ -- вона в OZ_AdminWipeReply, під
-    // `ack.Ok`. Причина довга й лежить там.
-    private string PlayerWipe(string uid, string op, PlayerIdentity sender, out bool ok, out string error)
-    {
-        if (uid == "")
-        {
-            error = "STR_OZ_ERR_NO_TARGET";
-            return "";
-        }
-
-        // Міст питаємо ПЕРШИМ: якщо його немає, не робимо НІЧОГО. Половина
-        // вайпу гірша за жодного -- замерзлі КПК при живих тредах виглядали
-        // б як баг, а не як смерть.
-        if (!OZ_BridgeClient.Alive())
-        {
-            error = "STR_OZ_ERR_NO_BRIDGE";
-            return "";
-        }
-
-        // Другий натиск, поки перший у дорозі, -- відмова, а не другий
-        // пермадес. Причина довга й лежить в OZ_WipeInFlight.
-        if (OZ_WipeInFlight.Busy(uid))
-        {
-            error = "STR_OZ_ERR_SLOW_DOWN";
-            return "";
-        }
-
-        OZ_AdminWipeAsk a = new OZ_AdminWipeAsk();
-        a.Uid = uid;
-        // Гру відпрацюємо самі, з відповіді, -- хай міст не шле поштовх назад.
-        a.FromGame = true;
-
-        string letter;
-        string jerr;
-        if (!JsonFileLoader<OZ_AdminWipeAsk>.MakeData(a, letter, jerr, false))
-        {
-            error = "STR_OZ_ERR_INTERNAL";
-            return "";
-        }
-
-        OZ_Log.Info("admin: player " + uid + " wipe asked by " + sender.GetPlainId());
-        OZ_WipeInFlight.Begin(uid);
-        OZ_BridgeClient.Call("v1/player/wipe", letter, new OZ_AdminWipeReply(sender.GetPlainId(), op, uid));
-
-        // Відповідь піде з OZ_AdminWipeReply, коли міст відпишеться.
         ok    = false;
         error = OZ_Const.DEFER;
         return "";

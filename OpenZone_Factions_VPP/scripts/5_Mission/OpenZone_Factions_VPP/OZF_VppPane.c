@@ -118,6 +118,20 @@ modded class OZ_VppAdminMenu
 
     void OnFactionResponse(string section, string op, bool ok, string json, string error)
     {
+        // ЄДИНИЙ ЧУЖИЙ РОЗДІЛ, ЯКИЙ МИ СЛУХАЄМО, І ЛИШЕ ОДНА ЙОГО ОПЕРАЦІЯ.
+        //
+        // Пермадес переїхав у ядро 2026-09-08, а кнопка WIPE лишилась тут --
+        // отже відповідь на неї приходить розділом "players", і без цього
+        // дозволу курок не знявся б ніколи. Дозвіл стоїть ОКРЕМОЮ гілкою з
+        // власним поверненням, а не розширенням перевірки нижче до «того АБО
+        // того»: саме така поблажливість колись ховала помилку з ростером --
+        // коментар про неї нижче й лишається чинним.
+        if (section == OZ_AdminSect.PLAYERS)
+        {
+            OnCoreWipeAnswer(op, ok, error);
+            return;
+        }
+
         // ОДИН розділ, і той наш. Раніше тут стояло «"admin" АБО "factions"»
         // -- і саме та поблажливість ховала помилку: клієнт слав ростер на
         // "admin", де про нього не чули, а перевірка на прийомі мовчки
@@ -127,8 +141,6 @@ modded class OZ_VppAdminMenu
 
         if (!ok)
         {
-            if (op.IndexOf("player_wipe:") == 0)
-                m_WipeArmed = false;
             if (op == "faction_upsert")
                 m_FacSaveArmed = false;
             if (op.IndexOf("faction_remove:") == 0)
@@ -166,13 +178,42 @@ modded class OZ_VppAdminMenu
                     return;
                 }
 
-                if (op.IndexOf("player_wipe:") == 0)
-                {
-                    m_WipeArmed = false;
-                    Hint("wiped: the character starts over as a novice stalker");
-                    RefreshSoon();
-                    return;
-                }
+    }
+
+    // Відповідь ЯДРОВОГО розділу на наш вайп.
+    protected void OnCoreWipeAnswer(string op, bool ok, string error)
+    {
+        // Розділ PLAYERS має й свої операції -- список присутніх, player_peek
+        // ядрової панелі. Нас стосується рівно одна.
+        if (op.IndexOf(OZ_PlayerOp.WIPE + ":") != 0)
+            return;
+
+        // Курок гасимо незалежно від того, що зараз на екрані: озброєна
+        // кнопка, яка пережила відповідь, вистрелила б із наступного
+        // натискання без попередження.
+        m_WipeArmed = false;
+
+        // ПІДКАЗКУ ПИШЕ ЛИШЕ ВІДКРИТА ПАНЕЛЬ (R-W4.5).
+        //
+        // OZ_ClientState.AdminWatch() -- розголос: цю саму відповідь чує й
+        // ядрова панель PLAYERS, у якої кнопка WIPE теж є, а Hint() пише в
+        // рядок ПОТОЧНОЇ вкладки. Без цієї перевірки останній записувач
+        // затирав би першого.
+        if (CurrentPane() != "factions")
+            return;
+
+        if (!ok)
+        {
+            Hint("#" + error);
+            return;
+        }
+
+        // ФОРМУЛЮВАННЯ ЛИШАЄТЬСЯ БАГАТИМ, і саме тому воно тут, а не в ядрі:
+        // «новачок» правда лише там, де цей мод завантажений. Ядрова панель
+        // каже про своє -- заморожене покоління, запечатані прилади, зняті
+        // точки спавну -- і не бреше на сервері без фракцій.
+        Hint("wiped: the character starts over as a novice stalker");
+        RefreshSoon();
     }
 
     void OnRoleAnswer(string op, bool ok, string why)
@@ -896,8 +937,12 @@ modded class OZ_VppAdminMenu
                         return true;
                     }
 
+                    // АДРЕСА ЯДРОВА, а кнопка наша. Та сама схема, що вже стоїть
+                    // на дві кнопки вище: BtnPSpawn/BtnPSpawnClear ведуть ядрові
+                    // операції спавнів із нашого ростера. Логіка вайпу одна --
+                    // OZ_Wipe у ядрі, -- і зайвого рядка тут немає жодного.
                     m_WipeArmed = false;
-                    Ask(OZF_Const.SECTION, "player_wipe:" + wuid, "{}");
+                    Ask(OZ_AdminSect.PLAYERS, OZ_PlayerOp.WIPE + ":" + wuid, "{}");
                     Hint("wiping...");
                     return true;
                 }
