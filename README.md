@@ -49,23 +49,6 @@ the boot line says so (`loadouts: presets=1 rungs=0 ...`).
   ranks, traits, membership and leadership live in the bot's database. There is
   no "factions without the bridge" configuration.
 
-## Upgrading
-
-The faction registry file was renamed from `OZ_Core_Factions.json` to
-`OZ_Factions.json` (2026-09-05) -- a leftover name from when the table still
-lived in Core. The mod renames the file itself on its first boot after the
-upgrade and keeps the old content as `OZ_Core_Factions.json.moved`.
-
-Run this mod on the **first** boot after upgrading Core: the invitation lifetime
-moved out of `OZ_Core_Settings.json` into this mod's own
-`$profile:OpenZone\OZ_Factions_Settings.json`, and the copy is made once, from
-Core's config or from its backup. A server whose Core `Validate` warns on every
-boot (the usual case -- an `http` bridge URL is enough) rewrites its config on
-each start and loses the old section from both places after the second boot; a
-server whose `Validate` stays silent keeps the section indefinitely. Either
-way, if the section is already gone when this mod first looks, the log says so
-and the number goes in by hand.
-
 ## Layout
 
 ```

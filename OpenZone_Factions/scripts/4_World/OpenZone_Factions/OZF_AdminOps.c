@@ -370,14 +370,8 @@ class OZ_PlayerWipe
         if (d.NpcContacts)
             d.NpcContacts.Clear();
 
-        // СПАДКОВИХ ПОЛІВ ТУТ БІЛЬШЕ НЕМАЄ (2026-09-06). Chats, TransponderTo,
-        // TransponderMode і PresenceHidden ядро тримало лише заради цього
-        // прибирання: жоден екран їх не читає, а два з них має заміну нижче
-        // (TransponderSet, HiddenFrom*). Поки ми їх чіпали, ядро не могло їх
-        // прибрати -- імені, якого немає, Enforce не пробачає.
-        //
-        // Нові поля ТЗ-4 §A скидаються пермадесом (R-A1.3, R-A3): нове
-        // життя не успадковує ані мовчання, ані маячка старого.
+        // Поля ТЗ-4 §A скидаються пермадесом (R-A1.3, R-A3): нове життя не
+        // успадковує ані мовчання, ані маячка старого.
         if (d.TransponderSet)
             d.TransponderSet.Clear();
         d.HiddenFromZone     = false;

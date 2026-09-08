@@ -554,8 +554,6 @@ class OZ_Factions
         if (s_Cfg)
             return;
 
-        MigrateFileName();
-
         s_Cfg = new OZ_FactionsConfig();
         // ЗАУВАГА, І ВОНА НЕ ПРО ЦЕЙ РЯДОК. Після Load тут лежить об'єкт,
         // якого створив ЗАГРУЗЧИК (OZ_ConfigLoader передає cfg як inout, а
@@ -592,73 +590,6 @@ class OZ_Factions
             if (s_Cfg.Factions[i] && s_Cfg.Factions[i].Id != "")
                 s_ById.Set(s_Cfg.Factions[i].Id, s_Cfg.Factions[i]);
         }
-    }
-
-    // Одноразове перейменування файла реєстру: до 2026-09-05 фракції писали
-    // "OZ_Core_Factions.json" -- лишок з часів, коли таблиця ще жила в ядрі
-    // (виділені звідти 2026-09-04). Тепер файл носить ім'я цього мода.
-    //
-    // МУСИТЬ СТОЯТИ ПЕРЕД Load. OZ_ConfigLoader на відсутньому шляху мовчки
-    // пише умовчання (LoadDefaults) і одразу зберігає їх на диск -- спитай
-    // він спершу новий шлях, стенд із самим лише старим файлом отримає ДЕСЯТЬ
-    // дефолтних фракцій замість дев'яти адмінових, і в ту ж мить перезапису
-    // старий файл перестане бути джерелом правди для будь-кого.
-    //
-    // Ознака разовості -- НАЯВНІСТЬ нового файла, а не окремий прапорець:
-    // другий старт бачить його одразу й виходить першим рядком.
-    private static void MigrateFileName()
-    {
-        string oldPath = OZ_Const.PROFILE_DIR + "\\OZ_Core_Factions.json";
-        string newPath = OZ_Const.PROFILE_DIR + "\\OZ_Factions.json";
-
-        if (FileExist(newPath))
-            return;
-        if (!FileExist(oldPath))
-            return;
-
-        string movedPath = oldPath + ".moved";
-
-        if (!CopyFile(oldPath, newPath))
-        {
-            string failed = "factions: cannot copy " + oldPath + " to " + newPath;
-            failed += " - the rename did not happen, the old file is untouched";
-            OZ_Log.Error(failed);
-            return;
-        }
-
-        // Копія під старим ім'ям лишається на диску (вимога міграції); якщо
-        // саме вона не вдалася, старий файл лишаємо на місці й не видаляємо
-        // його -- інакше вміст пережив би тільки під новим ім'ям, а обіцяний
-        // .moved так і не з'явився б. Обидва виклики -- під $profile:, як
-        // CopyFile/DeleteFile і вимагають.
-        bool movedOk = CopyFile(oldPath, movedPath);
-        if (!movedOk)
-        {
-            string warnMoved = "factions: cannot copy " + oldPath + " to " + movedPath;
-            warnMoved += " - keeping " + oldPath + " in place instead of deleting it";
-            OZ_Log.Warn(warnMoved);
-        }
-
-        if (movedOk)
-        {
-            // Видаляємо старий шлях лише тоді, коли копія під .moved вдалася.
-            if (!DeleteFile(oldPath))
-            {
-                // Два файли реєстру лишаються на диску: newPath -- єдине
-                // джерело правди відтепер, а вартовий на початку функції
-                // (FileExist(newPath) вище) більше не чіпає oldPath на
-                // наступних стартах -- він бачить лише наявність нового
-                // файла, тож повторної спроби видалення не буде.
-                string warnDelete = "factions: cannot delete " + oldPath + " after copying it to " + newPath;
-                warnDelete += " - two registry files remain, " + newPath + " is the registry from now on";
-                OZ_Log.Warn(warnDelete);
-            }
-        }
-
-        string done = "factions: " + oldPath + " renamed to " + newPath;
-        if (movedOk)
-            done += " (old file kept as " + movedPath + ")";
-        OZ_Log.Info(done);
     }
 
     static int Count()

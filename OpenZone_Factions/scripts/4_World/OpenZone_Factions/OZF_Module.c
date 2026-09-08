@@ -39,9 +39,8 @@ class OZF_Module : CF_ModuleWorld
         if (!GetGame().IsServer())
             return;
 
-        // ВЛАСНІ НАЛАШТУВАННЯ, а не розділ у конфігу ядра (2026-09-04).
-        // Перший старт забирає старе число з OZ_Core_Settings.json, щоб адмін
-        // не втратив межу, яку колись виставив, -- див. OZF_Settings.Inherit.
+        // ВЛАСНІ НАЛАШТУВАННЯ, а не розділ у конфігу ядра (2026-09-04):
+        // OZ_Factions_Settings.json зі своїм InviteTtlSeconds, дефолт 120.
         OZF_Settings.ServerLoad();
 
         OZ_Factions.ServerLoad();
