@@ -6,8 +6,12 @@
       "note": "Межа половинок вкладки на всю висоту: ліворуч від неї малює сторінка контактів. Вона єдина стоїть на самому краю сторінки, тому поле дає не корінь, а FactionBody."}},
     {"frame": {"name": "FactionBody", "size": "fill", "inset": "$space.page", "children": [
     {"vbox": {"name": "FactionCol", "size": "fill", "gap": "$space.tight", "children": [
-      {"header": {"icon": "tab_faction", "h": "$size.header", "title": {"name": "FactionTitle"},
-        "note": "Назву й колір угруповання пише скрипт; без угруповання тут чесне «БЕЗ УГРУПОВАННЯ»."}},
+      {"hbox": {"h": "$size.header", "gap": "$space.gap", "children": [
+        {"icon": {"name": "FactionTitleIcon", "set": "oz_factions_icons", "image": "tab_faction",
+          "size": [22, 22], "color": "$accent"}},
+        {"label": {"name": "FactionTitle", "w": "fill", "font": "title", "color": "$accent"}}
+       ],
+        "note": "Розкритий `header`, і саме через набір значка: скорочення `header` віддає значок у токен device.iconset, тобто в атлас КПК, а наш значок відтепер живе у власному наборі OpenZone_Factions_PDA (рішення власника 2026-09-09). Решта -- те саме, що будував би `header`: рядок висотою $size.header, значок 22x22 і назва на всю решту. Назву й колір угруповання пише скрипт; без угруповання тут чесне «БЕЗ УГРУПОВАННЯ»."}},
       {"label": {"name": "FactionMine", "h": 20, "font": "hint", "color": "$muted",
         "note": "Підзаголовок: моє звання і, якщо є, посада лідера. Пише скрипт."}},
       {"section": {"name": "SecMemb", "text": "#STR_OZ_FACTION_SEC_MEMBERS"}},

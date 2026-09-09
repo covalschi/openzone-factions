@@ -41,6 +41,14 @@ class CfgMods
 
         class defs
         {
+            // НАШ ЗНАЧОК -- У НАШОМУ НАБОРІ (рішення власника 2026-09-09).
+            // Картинка вкладки «Фракція» лежала в атласі КПК: мод малював
+            // сторінку, а її значок ніс сусід, який про фракції не знає. Тепер
+            // набір їде разом зі склейкою, тим самим способом, яким його везе
+            // будь-який мод: рядок тут плюс .imageset поруч зі своїм _ca.paa
+            // всередині pbo. Реєструє його ТА САМА конструкція, що й у КПК і
+            // у VPPAdminTools, -- перелік файлів у defs мода.
+            class imageSets { files[] = {"OpenZone_Factions_PDA/gui/imagesets/oz_factions_icons.imageset"}; };
             class gameScriptModule    { value = ""; files[] = {"OpenZone_Factions_PDA/scripts/3_Game"}; };
             class worldScriptModule   { value = ""; files[] = {"OpenZone_Factions_PDA/scripts/4_World"}; };
             class missionScriptModule { value = ""; files[] = {"OpenZone_Factions_PDA/scripts/5_Mission"}; };

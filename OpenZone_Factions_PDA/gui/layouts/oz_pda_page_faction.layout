@@ -54,7 +54,7 @@ FrameWidgetClass OZ_PageFaction {
        vexactsize 1
        color 0.31 0.71 0.91 1
        priority 0
-       image0 "set:oz_pda_icons image:tab_faction"
+       image0 "set:oz_factions_icons image:tab_faction"
        mode blend
        "src alpha" 1
       }

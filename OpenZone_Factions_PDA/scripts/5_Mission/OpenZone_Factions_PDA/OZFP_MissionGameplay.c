@@ -20,12 +20,17 @@ modded class MissionGameplay
         OZ_PdaPageFactory.Add(OZFP_Const.PAGE_FACTION, OZ_PdaPageFaction);
         OZ_PdaPageFactory.Letter(OZFP_Const.PAGE_FACTION, "F");
 
-        // ЗНАЧОК ВКЛАДКИ -- НАШ. Атлас КПК несе "tab_faction" від задачі 23,
-        // але реєстр спрайтів засівається лише сімома вбудованими сторінками:
-        // чужа сторінка, яка покликала саме Letter(), діставала запасний
-        // "tab_page" -- ту саму піктограму, що й безіменна сторінка. Один
-        // рядок, і на рейці стоїть фракційний значок.
-        OZ_PdaPageFactory.Sprite(OZFP_Const.PAGE_FACTION, "tab_faction");
+        // ЗНАЧОК ВКЛАДКИ -- НАШ, І НАБІР ТЕЖ НАШ. Реєстр спрайтів у КПК
+        // засівається лише сімома вбудованими сторінками: чужа сторінка, яка
+        // покликала саме Letter(), діставала запасний "tab_page" -- ту саму
+        // піктограму, що й безіменна сторінка. Один рядок, і на рейці стоїть
+        // фракційний значок.
+        //
+        // Посилання ПОВНЕ (рішення власника 2026-09-09). Тут стояло голе
+        // "tab_faction", тобто спрайт з атласа КПК: щоб фракції мали вкладку
+        // зі своїм значком, КПК мусив везти картинку фракцій. Тепер набір їде
+        // разом із цим pbo (config.cpp, class imageSets).
+        OZ_PdaPageFactory.Sprite(OZFP_Const.PAGE_FACTION, "set:oz_factions_icons image:tab_faction");
 
         OZ_PdaPageFactory.Pair(OZ_PdaConst.PAGE_CONTACTS, OZFP_Const.PAGE_FACTION);
     }
