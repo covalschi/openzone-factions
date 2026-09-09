@@ -4,7 +4,7 @@
 ONE SPRITE, and that is the whole point (owner decision 2026-09-09): a page's
 tab icon comes from the module that registers the page. `tab_faction` used to
 live in the PDA's own atlas -- the picture of a mod the PDA does not contain --
-so the PDA could not gain a tab without the PDA gaining the picture. Now the
+so the factions mod could not gain a tab without the PDA gaining the picture. Now the
 glue that brings the page brings the picture with it.
 
 The geometry is the PDA's, on purpose: 4x oversampled, downscaled to a 56 px
